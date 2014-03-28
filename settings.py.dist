@@ -1,0 +1,5 @@
+# Copy this file to settings.py 
+# Add your username and password here
+# 
+username = ''
+password = ''
