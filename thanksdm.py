@@ -11,6 +11,7 @@ api = API(auth)
 
 print "Logged in as:" + api.me().name
 for follower in api.followers():
-    txt = ("Thanks for following me! Did you know that you have %s followers and %s friends?") % (follower.followers_count, follower.friends_count)
-    print txt
-    api.send_direct_message(user_id=follower.id, text=txt)
+    #txt = ("Thanks for following me! Did you know that you have %s followers and %s friends?") % (follower.followers_count, follower.friends_count)
+    #print txt
+    print dir(follower)
+    #api.send_direct_message(user_id=follower.id, text=txt)
