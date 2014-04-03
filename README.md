@@ -1,9 +1,10 @@
 ferret
 ======
 
-Work in progress bot
+The Cigital Tech Ferret.
 
 To get started
+
 1. Checkout this repository
 2. Create a `settings.py` file (see `settings.py.dist` for an example)
 3. Install `tweepy` either in a python virtual environment or systemwide (e.g. `pip install tweepy`)
