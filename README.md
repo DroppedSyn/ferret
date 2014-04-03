@@ -1,7 +1,7 @@
 ferret
 ======
 
-Work in progress bot
+The Cigital Tech Ferret.
 
 To get started
 1. Checkout this repository
