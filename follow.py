@@ -1,4 +1,4 @@
-from tweepy import API
+from tweepy import API, Cursor
 
 from tweepy.utils import import_simplejson, urlencode_noplus
 json = import_simplejson()
@@ -20,8 +20,8 @@ class Follow():
                 a = f.read().strip()
                 self.whitelist.append(a)
 
-        for follower in self.api.followers():
-            if follower in self.whitelist:
+        for follower in Cursor(self.api.followers()).items():
+            if follower.screen_name in self.whitelist:
                 self.api.create_friendship(follower)
                 # We need to wait before sending a DM as this may not be instantaneous
 
@@ -43,5 +43,5 @@ class Follow():
         Return my followers
         """
         for follower in self.api.followers(self.auth.get_username()):
-            print follower.name, follower.screen_name
+            print follower.screen_name
 

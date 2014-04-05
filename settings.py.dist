@@ -8,3 +8,6 @@ consumer_secret=""
 # Create an access token under the the "Your access token" section
 access_token=""
 access_token_secret=""
+
+# List of people you want the bot to recommend (twitter_screen_names)
+list_of_people=[]
