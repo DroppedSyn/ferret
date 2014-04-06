@@ -1,6 +1,7 @@
 from tweepy import API
 from settings import list_of_people
 
+
 class DMHandler():
     def __init__(self, auth):
         self.auth = auth
@@ -10,7 +11,7 @@ class DMHandler():
         """
         Check if we follow a bunch of people, if not, send a DM
         """
-        if screen_name == None:
+        if screen_name is None:
             return
         out = {}
         for person in list_of_people:
@@ -23,11 +24,7 @@ class DMHandler():
                     out[person] = item.following
         return out
 
-
-
-
-
-    def send_dm(self, screen_name = None, id = None, message = None):
+    def send_dm(self, screen_name=None, id=None, message=None):
         pass
 
 
