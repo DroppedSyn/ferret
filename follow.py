@@ -1,5 +1,4 @@
 from tweepy import API, Cursor
-
 from tweepy.utils import import_simplejson, urlencode_noplus
 
 json = import_simplejson()
