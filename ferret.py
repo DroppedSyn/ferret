@@ -96,13 +96,13 @@ def main():
     # Show my followers
     f = Follow(auth)
     print f.my_followers()
-    #try:
-    print "Streaming started..."
-    publicstream.filter(track=["heartbleed"])
-    #except:
-    print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
+    try:
+        print "Streaming started..."
+        publicstream.filter(track=["heartbleed"])
+    except:
+        print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
        # userstream.disconnect()
-    publicstream.disconnect()
+        publicstream.disconnect()
 
 
 if __name__ == '__main__':
