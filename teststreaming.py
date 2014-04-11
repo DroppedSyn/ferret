@@ -2,6 +2,7 @@ from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler, API, Cursor
 from dmhandlers import DMHandler
 from tweepy.utils import import_simplejson
+from tweepy import Stream
 
 json = import_simplejson()
 from settings import consumer_key, consumer_secret, access_token, access_token_secret
@@ -25,3 +26,6 @@ if __name__ == '__main__':
     a = API(auth)
     n = DMHandler(auth)
     print n.check_if_follows(screen_name="KimKardashian")
+    l = StdOutListener()
+    stream = Stream(auth, l)
+    stream.filter(track=['JustinReleaseLifeIsWorthLiving'])

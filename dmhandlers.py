@@ -39,6 +39,7 @@ class DMHandler():
             # Send verification email
         if email_verified is True:
             # Mark email as verified! They are who they say they are.
+            pass
 
 
 

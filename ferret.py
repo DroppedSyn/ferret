@@ -1,5 +1,5 @@
 from tweepy.streaming import StreamListener
-from tweepy import OAuthHandler
+from tweepy import OAuthHandler, API
 from tweepy import Stream
 from utils import bcolors
 from follow import Follow
@@ -7,9 +7,11 @@ from textwrap import TextWrapper
 from dmhandlers import DMHandler
 import sys, time
 from tweepy.utils import import_simplejson, urlencode_noplus
+import couchdb
 
 json = import_simplejson()
 from settings import consumer_key, consumer_secret, access_token, access_token_secret
+from settings import dbname
 
 
 class UserStreamListener(StreamListener):
@@ -25,6 +27,7 @@ class UserStreamListener(StreamListener):
             print '\n %s  %s  via %s\n' % (status.author.screen_name, status.created_at, status.source)
         except:
             pass
+        return
 
     def on_direct_message(self, status):
         text = status.direct_message["text"].strip().lower()
@@ -61,24 +64,23 @@ class PublicStreamListener(StreamListener):
     """
     A listener that handles public stream data
     """
+    def __init__(self, api=None):
+        super(StreamListener, self).__init__()
+        self.api = api or API()
+        self.server = couchdb.Server()
+        self.db = self.server['twitter_heartbleed']
 
     def on_data(self, raw_data):
-        print raw_data
-        return True
-
-    def on_status(self, status):
-        try:
-            print self.status_wrapper.fill(status.text)
-            print '\n %s  %s  via %s\n' % (status.author.screen_name, status.created_at, status.source)
-        except:
-            # Catch any unicode errors while printing to console
-            # and just ignore them to avoid breaking application.
-            pass
+        data = json.loads(raw_data)
+        self.db.save(data)
 
     def on_error(self, status):
-        print "Error!"
         print status
 
+    def on_timeout(self):
+        print bcolors.WARNING+ "Timed out!, Sleeping for 60" + bcolors.ENDC
+        time.sleep(60)
+        return
 
 def main():
     # Set up the authentication!
@@ -86,22 +88,21 @@ def main():
     auth.set_access_token(access_token, access_token_secret)
 
     # Create a user and public stream
-    u = UserStreamListener()
-    userstream = Stream(auth, u)
+    #u = UserStreamListener()
+    #userstream = Stream(auth, u)
 
     p = PublicStreamListener()
     publicstream = Stream(auth, p)
     # Show my followers
     f = Follow(auth)
     print f.my_followers()
-    try:
-        print "Streaming started..."
-        userstream.userstream()
-        publicstream.filter(track=["swsec"])
-    except:
-        print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
-        userstream.disconnect()
-        publicstream.disconnect()
+    #try:
+    print "Streaming started..."
+    publicstream.filter(track=["heartbleed"])
+    #except:
+    print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
+       # userstream.disconnect()
+    publicstream.disconnect()
 
 
 if __name__ == '__main__':
