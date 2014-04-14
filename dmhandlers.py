@@ -9,7 +9,7 @@ class DMHandler():
 
     def check_if_follows(self, screen_name=None):
         """
-        Check if we follow a bunch of people, if not, send a DM
+        Check if screen_name follows the users we want (defined in settings)
         """
         if screen_name is None:
             return
@@ -23,6 +23,7 @@ class DMHandler():
                 if item.screen_name == screen_name:
                     out[person] = item.following
         return out
+
     def verify_user(self, direct_message=None, email_verified=False):
         """
         Allow users to claim twitter IDs
@@ -40,9 +41,6 @@ class DMHandler():
         if email_verified is True:
             # Mark email as verified! They are who they say they are.
             pass
-
-
-
 
     def send_dm(self, screen_name=None, id=None, message=None):
         pass
