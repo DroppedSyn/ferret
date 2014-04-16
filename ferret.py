@@ -12,6 +12,8 @@ import commands
 
 json = import_simplejson()
 from settings import consumer_key, consumer_secret, access_token, access_token_secret
+# Terms we want to track in the public stream
+from settings import tracking_terms
 
 
 class UserStreamListener(StreamListener):
@@ -77,7 +79,7 @@ class PublicStreamListener(StreamListener):
         print status
 
     def on_timeout(self):
-        print bcolors.WARNING+ "Timed out!, Sleeping for 60" + bcolors.ENDC
+        sys.stderr.write(bcolors.WARNING+ "Timed out!, Sleeping for 60" + bcolors.ENDC)
         time.sleep(60)
         return
 
@@ -98,8 +100,7 @@ def main():
     print f.my_followers()
     try:
         print "Streaming started..."
-
-        publicstream.filter(track=["heartbleed"])
+        publicstream.filter(track=tracking_terms)
     except:
         print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
        # userstream.disconnect()
