@@ -13,7 +13,7 @@ import commands
 json = import_simplejson()
 from settings import consumer_key, consumer_secret, access_token, access_token_secret
 # Terms we want to track in the public stream
-from settings import tracking_terms
+from settings import tracking_terms, dbname
 
 
 class UserStreamListener(StreamListener):
@@ -44,7 +44,7 @@ class UserStreamListener(StreamListener):
             cigibot_action = commands.COMMANDS[text]
         except KeyError:
             pass
-        if action is not -1:
+        if cigibot_action is not -1:
             status.direct_message["cigibot_action"] = cigibot_action
         # Save
         server = couchdb.Server()
@@ -69,7 +69,8 @@ class PublicStreamListener(StreamListener):
         super(StreamListener, self).__init__()
         self.api = api or API()
         self.server = couchdb.Server()
-        self.db = self.server['twitter_heartbleed']
+        # TODO: Fix hardcoded name
+        self.db = self.server["twitter_heartbleed"]
 
     def on_data(self, raw_data):
         data = json.loads(raw_data)
@@ -103,7 +104,7 @@ def main():
         publicstream.filter(track=tracking_terms)
     except:
         print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
-       # userstream.disconnect()
+        userstream.disconnect()
         publicstream.disconnect()
 
 
