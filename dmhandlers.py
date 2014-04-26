@@ -1,5 +1,5 @@
 from tweepy import API
-from settings import list_of_people
+from settings import LIST_OF_PEOPLE
 
 
 class DMHandler():
@@ -7,14 +7,20 @@ class DMHandler():
         self.auth = auth
         self.api = API(self.auth)
 
-    def check_if_follows(self, screen_name=None):
+    def handledm(self, dm):
+        if dm["cigibot_action"] == 1:
+            self.__check_if_follows(dm["screen_name"])
+        else:
+            return
+
+    def __check_if_follows(self, screen_name=None):
         """
         Check if screen_name follows the users we want (defined in settings)
         """
         if screen_name is None:
             return
         out = {}
-        for person in list_of_people:
+        for person in LIST_OF_PEOPLE:
             # This returns two friendship object, the first one tells us if source follows target
             # and the second one tells us if target follows source. We're only interested in the
             # first for now.
@@ -22,9 +28,10 @@ class DMHandler():
             for item in output:
                 if item.screen_name == screen_name:
                     out[person] = item.following
+        print out
         return out
 
-    def verify_user(self, direct_message=None, email_verified=False):
+    def __verify_user(self, direct_message=None, email_verified=False):
         """
         Allow users to claim twitter IDs
         if they say I am rksinha, then the DM sender is mapped to that twitter ID
@@ -44,5 +51,3 @@ class DMHandler():
 
     def send_dm(self, screen_name=None, id=None, message=None):
         pass
-
-

@@ -7,19 +7,21 @@ from textwrap import TextWrapper
 import sys
 import time
 from tweepy.utils import import_simplejson, urlencode_noplus
-import couchdb
+from couchdbkit import *
 import commands
 
 json = import_simplejson()
-from settings import consumer_key, consumer_secret, access_token, access_token_secret
+from settings import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
 # Terms we want to track in the public stream
-from settings import tracking_terms, dbname
+from settings import TRACKING_TERMS, DBNAME
 
 
 class UserStreamListener(StreamListener):
     """
     A listener handles tweets are the received on the user stream.
     """
+    def __init__(self):
+        self.server = Server()
 
     status_wrapper = TextWrapper(width=60, initial_indent='    ', subsequent_indent='    ')
 
@@ -36,20 +38,21 @@ class UserStreamListener(StreamListener):
         Receive direct messages, chuck them in a DB
         Tag them for action required, if applicable.
         """
-
         text = status.direct_message["text"].strip().lower()
+        print text
         # Check if the text contains any commands
         cigibot_action = -1
         try:
             cigibot_action = commands.COMMANDS[text]
         except KeyError:
             pass
+        # If we need to take action, save the message, else ignore it.
         if cigibot_action is not -1:
             status.direct_message["cigibot_action"] = cigibot_action
         # Save
-        server = couchdb.Server()
-        db = server["direct_messages"]
-        db.save(status)
+        db = self.server.get_or_create_db("direct_messages")
+        print status["text"]
+        db.save_doc(status)
         return True
 
     def on_error(self, status):
@@ -68,27 +71,27 @@ class PublicStreamListener(StreamListener):
     def __init__(self, api=None):
         super(StreamListener, self).__init__()
         self.api = api or API()
-        self.server = couchdb.Server()
-        # TODO: Fix hardcoded name
-        self.db = self.server["twitter_heartbleed"]
+        self.server = Server()
+        self.db = self.server.get_or_create_db(DBNAME)
 
     def on_data(self, raw_data):
         data = json.loads(raw_data)
-        self.db.save(data)
+        self.db.save_doc(data)
 
     def on_error(self, status):
         print status
 
     def on_timeout(self):
-        sys.stderr.write(bcolors.WARNING+ "Timed out!, Sleeping for 60" + bcolors.ENDC)
+        sys.stderr.write(bcolors.WARNING+"Timed out!, Sleeping for 60s"+bcolors.ENDC)
         time.sleep(60)
         return
 
 def main():
     # Set up the authentication!
-    auth = OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
-
+    auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+    auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+    api = API(auth)
+    print api.rate_limit_status()
     # Create a user and public stream
     u = UserStreamListener()
     userstream = Stream(auth, u)
@@ -99,13 +102,13 @@ def main():
     # Show my followers
     f = Follow(auth)
     print f.my_followers()
-    try:
-        print "Streaming started..."
-        publicstream.filter(track=tracking_terms)
-    except:
-        print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
-        userstream.disconnect()
-        publicstream.disconnect()
+
+    print "Streaming started..."
+    publicstream.filter(track=TRACKING_TERMS)
+    #except:
+    #    print bcolors.WARNING + "Stopped streaming...." + bcolors.ENDC
+     #   userstream.disconnect()
+     #   publicstream.disconnect()
 
 
 if __name__ == '__main__':
