@@ -6,27 +6,33 @@ class DMHandler():
     def __init__(self, auth):
         self.auth = auth
         self.api = API(self.auth)
+        self.commands = {
+            "check me out": self.__check_if_follows,
+        }
 
-    def handledm(self, dm):
-        if dm["cigibot_action"] == 1:
-            self.__check_if_follows(dm["screen_name"])
-        else:
-            return
+    def handledm(self, message):
+        command = message.text.strip().lower()
+        print "Command", command
+        try:
+            self.commands[command](message)
+        except KeyError:
+            print "No idea what that command was!"
 
-    def __check_if_follows(self, screen_name=None):
+    def __check_if_follows(self, message):
         """
         Check if screen_name follows the users we want (defined in settings)
         """
-        if screen_name is None:
+        if message.sender.screen_name is None:
             return
         out = {}
         for person in LIST_OF_PEOPLE:
             # This returns two friendship object, the first one tells us if source follows target
             # and the second one tells us if target follows source. We're only interested in the
             # first for now.
-            output = self.api.show_friendship(source_screen_name=screen_name, target_screen_name=person)
+            output = self.api.show_friendship(source_screen_name=message.sender.screen_name,
+                                              target_screen_name=person)
             for item in output:
-                if item.screen_name == screen_name:
+                if item.screen_name == message.sender.screen_name:
                     out[person] = item.following
         print out
         return out
@@ -49,5 +55,5 @@ class DMHandler():
             # Mark email as verified! They are who they say they are.
             pass
 
-    def send_dm(self, screen_name=None, id=None, message=None):
+    def send_dm(self, screen_name=None, message=None):
         pass

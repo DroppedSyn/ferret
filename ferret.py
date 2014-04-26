@@ -56,7 +56,8 @@ class UserStreamListener(StreamListener):
         return True
 
     def on_error(self, status):
-        print status
+        print "Error!", status
+        return
 
     def on_timeout(self):
         sys.stderr.write(bcolors.WARNING + "Timeout, sleeping for 60 seconds...\n" + bcolors.ENDC)
@@ -77,9 +78,11 @@ class PublicStreamListener(StreamListener):
     def on_data(self, raw_data):
         data = json.loads(raw_data)
         self.db.save_doc(data)
+        return
 
     def on_error(self, status):
         print status
+        return
 
     def on_timeout(self):
         sys.stderr.write(bcolors.WARNING+"Timed out!, Sleeping for 60s"+bcolors.ENDC)
@@ -91,7 +94,8 @@ def main():
     auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     api = API(auth)
-    print api.rate_limit_status()
+    ratelimit = api.rate_limit_status()
+    print "We have" + ratelimit["remaining_hits"]+ "hits left"
     # Create a user and public stream
     u = UserStreamListener()
     userstream = Stream(auth, u)

@@ -5,7 +5,7 @@ from tweepy.utils import import_simplejson
 from tweepy import Stream
 
 json = import_simplejson()
-from settings import consumer_key, consumer_secret, access_token, access_token_secret
+from settings import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
 
 
 class StdOutListener(StreamListener):
@@ -21,8 +21,8 @@ This is a basic listener that just prints received tweets to stdout.
 
 
 if __name__ == '__main__':
-    auth = OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
+    auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+    auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     a = API(auth)
     n = DMHandler(auth)
     print n.check_if_follows(screen_name="KimKardashian")
