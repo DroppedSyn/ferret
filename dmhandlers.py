@@ -1,22 +1,24 @@
 from tweepy import API
 from settings import LIST_OF_PEOPLE
+from commands import COMMANDS
 
 
-class DMHandler():
+class DmCommandHandler():
     def __init__(self, auth):
         self.auth = auth
         self.api = API(self.auth)
         self.commands = {
             "check me out": self.__check_if_follows,
+            "i am": self.__verify_user,
         }
 
-    def handledm(self, message):
+    def handle_dm_command(self, message):
         command = message.text.strip().lower()
         print "Command", command
         try:
             self.commands[command](message)
         except KeyError:
-            print "No idea what that command was!"
+            print "No idea what what %s is meant to do." %s
 
     def __check_if_follows(self, message):
         """
