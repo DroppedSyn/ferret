@@ -1,6 +1,6 @@
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler, API, Cursor
-from dmhandlers import DMHandler
+from dmhandlers import DmCommandHandler
 from tweepy.utils import import_simplejson
 from tweepy import Stream
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     a = API(auth)
-    n = DMHandler(auth)
+    n = DmCommandHandler(auth)
     print n.check_if_follows(screen_name="KimKardashian")
     l = StdOutListener()
     stream = Stream(auth, l)
