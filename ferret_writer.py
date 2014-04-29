@@ -15,25 +15,28 @@ def main():
     c.execute('''CREATE TABLE IF NOT EXISTS STATS(dm_sinceid INTEGER)''')
     try:
         while True:
+            # Sleep if we're almost over the API limit
             a = pp.rl(api.rate_limit_status(), 'direct_messages', '/direct_messages')
-            # TODO: See how many uses we have left for this window
-            # If we're over, might as well die until the next window
+            if a['remaining'] < 3:
+                print "Almost hit rate limit, sleeping until the next window!"
+                t = a['reset'] - time.time() 
+                print "Sleeping for %d seconds" % t 
+                # add 3 seconds for luck/clock skew :D
+                time.sleep(t+2)
             since = None
             c.execute('''SELECT dm_sinceid from STATS''')
             row = c.fetchone()
             since = row[0]
-            print "Since ID", since
             messages = None
             if since is not None:
                 messages = api.direct_messages(since_id=since)
             else:
                 messages = api.direct_messages()
-            if len(messages) is not 0:
+            if len(messages) > 0:
                 sinceid = messages[0].id
-                print "Since ID %d, updating" % sinceid
                 c.execute('UPDATE STATS SET dm_sinceid=?', (sinceid, ))
                 conn.commit()
-                print ("Have %d messages to handle") % len(messages)
+                print ("Have %d DMs to handle") % len(messages)
                 dmcommandhandler = DmCommandHandler(auth)
                 for message in messages:
                     dmcommandhandler.handle_dm_command(message)

@@ -23,9 +23,11 @@ class bcolors:
 class pp:
     @staticmethod
     def rl(r, api_name, api_url):
+        """
+        Pretty print the twitter rate limit
+        """
         reset = r['resources'][api_name][api_url]['reset']
         remaining= r['resources'][api_name][api_url]['remaining']
         t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(reset))
         print "We have %d calls left until %s" % (remaining, t)
-        return [remaining, reset]
-
+        return {'remaining': remaining, 'reset': reset}
