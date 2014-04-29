@@ -12,7 +12,7 @@ def main():
     api = API(auth)
     conn = sqlite3.connect('stats.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS STATS(dm_sinceid INTEGER)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS STATS(dm_sinceid INTEGER DEFAULT 0)''')
     try:
         while True:
             # Sleep if we're almost over the API limit
@@ -26,7 +26,10 @@ def main():
             since = None
             c.execute('''SELECT dm_sinceid from STATS''')
             row = c.fetchone()
-            since = row[0]
+            if row is None:
+                    c.execute('''INSERT INTO STATS(dm_sinceid) VALUES (0) ''')
+            else:
+                    since = row[0]
             messages = None
             if since is not None:
                 messages = api.direct_messages(since_id=since)

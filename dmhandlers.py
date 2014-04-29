@@ -36,7 +36,12 @@ class DmCommandHandler():
             for item in output:
                 if item.screen_name == message.sender.screen_name:
                     out[person] = item.following
-        print out
+        s =  ""
+        for k, v in out.iteritems():
+                if v is False:
+                        s = s + k + " "
+        print "You should follow %s" %s
+
         return out
 
     def __verify_user(self, direct_message=None, email_verified=False):
