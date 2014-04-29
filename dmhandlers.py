@@ -18,7 +18,7 @@ class DmCommandHandler():
         try:
             self.commands[command](message)
         except KeyError:
-            print "No idea what what %s is meant to do." %s
+            print "No idea what what %s is meant to do." % command
 
     def __check_if_follows(self, message):
         """

@@ -4,6 +4,7 @@ from settings import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_S
 import time
 from dmhandlers import DmCommandHandler
 import sqlite3
+from utils import pp
 
 def main():
     auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
@@ -14,9 +15,10 @@ def main():
     c.execute('''CREATE TABLE IF NOT EXISTS STATS(dm_sinceid INTEGER)''')
     try:
         while True:
-            # Add rate limit checks
+            a = pp.rl(api.rate_limit_status(), 'direct_messages', '/direct_messages')
+            # TODO: See how many uses we have left for this window
+            # If we're over, might as well die until the next window
             since = None
-            # Might be an empty DB
             c.execute('''SELECT dm_sinceid from STATS''')
             row = c.fetchone()
             since = row[0]
@@ -40,7 +42,6 @@ def main():
                 print "Nothing to do just now. No new messages"
             print "Sleeping for a bit to stay below API limits"
             time.sleep(60)
-            print "I'm awake!"
     except KeyboardInterrupt:
         print "Killed by keyboard interrupt!"
         conn.commit()
