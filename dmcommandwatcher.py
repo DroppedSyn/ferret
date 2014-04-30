@@ -4,7 +4,8 @@ from settings import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_S
 import time
 from dmhandlers import DmCommandHandler
 import sqlite3
-from utils import pp
+import utils
+
 
 def main():
     auth = OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
@@ -16,13 +17,13 @@ def main():
     try:
         while True:
             # Sleep if we're almost over the API limit
-            a = pp.rl(api.rate_limit_status(), 'direct_messages', '/direct_messages')
+            a = utils.PrettyPrint.ratelimit(api.rate_limit_status(), 'direct_messages', '/direct_messages')
             if a['remaining'] < 3:
                 print "Almost hit rate limit, sleeping until the next window!"
                 t = a['reset'] - time.time() 
                 print "Sleeping for %d seconds" % t 
-                # add 3 seconds for luck/clock skew :D
-                time.sleep(t+2)
+                # add 3 seconds for luck/clock skew
+                time.sleep(t+3)
             since = None
             c.execute('''SELECT dm_sinceid from STATS''')
             row = c.fetchone()

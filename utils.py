@@ -20,9 +20,9 @@ class bcolors:
         self.FAIL = ''
         self.ENDC = ''
 
-class pp:
+class PrettyPrint:
     @staticmethod
-    def rl(r, api_name, api_url):
+    def ratelimit(r, api_name, api_url):
         """
         Pretty print the twitter rate limit
         """
