@@ -33,28 +33,6 @@ class UserStreamListener(StreamListener):
             pass
         return
 
-    def on_direct_message(self, status):
-        """
-        Receive direct messages, chuck them in a DB
-        Tag them for action required, if applicable.
-        """
-        text = status.direct_message["text"].strip().lower()
-        print text
-        # Check if the text contains any commands
-        cigibot_action = -1
-        try:
-            cigibot_action = commands.COMMANDS[text]
-        except KeyError:
-            pass
-        # If we need to take action, save the message, else ignore it.
-        if cigibot_action is not -1:
-            status.direct_message["cigibot_action"] = cigibot_action
-        # Save
-        db = self.server.get_or_create_db("direct_messages")
-        print status["text"]
-        db.save_doc(status)
-        return True
-
     def on_error(self, status):
         print "Error!", status
         return
@@ -95,7 +73,6 @@ def main():
     auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     api = API(auth)
     ratelimit = api.rate_limit_status()
-    print "We have" + ratelimit["remaining_hits"]+ "hits left"
     # Create a user and public stream
     u = UserStreamListener()
     userstream = Stream(auth, u)
