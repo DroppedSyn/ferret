@@ -48,35 +48,49 @@ def fetchdms():
     return True
 
 @app.task
-def check_if_follows(screen_name):
-    out = {}
+def check_if_follows():
+    #Check API limits
     api = _get_api()
-    for person in settings.LIST_OF_PEOPLE:
-        try:
-            output = api.show_friendship(source_screen_name = screen_name,
-                    target_screen_name = person)
-            for item in output:
-                if item.screen_name == screen_name:
-                    out[person] = item.following
-        except TweepError as err:
-            print "Failed to check follows for %s" % (screen_name)
-            return False
-    msg = u''
-    for k, v in out.iteritems():
-        if v is False:
-            msg = msg + "@"+ k + " "
-    if len(msg) > 0:
-        msg = " you should follow " + msg
-        update_status.delay(msg, to=screen_name)
-    else:
-        send_dm.delay("You're following everyone already, yay!", screen_name)
+    hits_left = utils.get_hits_left(api.rate_limit_status(), 'show_friendship')
+    if hits_left < 1:
+        return
+    cur = conn.cursor()
+    cur.execute("SELECT id, data from TASKS WHERE name = %s AND completed =
+    FALSE ORDER BY tstamp ASC LIMIT %s", ('checkiffollows', hits_left))
+    for record in cur:
+        if record is None:
+            return
+        taskid = record[0]
+        screen_name = record[1]
+        out = {}
+        for person in settings.LIST_OF_PEOPLE:
+            try:
+                output = api.show_friendship(source_screen_name = screen_name,
+                        target_screen_name = person)
+                for item in output:
+                    if item.screen_name == screen_name:
+                        out[person] = item.following
+            except TweepError as err:
+                print "Failed to check follows for %s" % (screen_name)
+                return False
+        msg = u''
+        for k, v in out.iteritems():
+            if v is False:
+                msg = msg + "@"+ k + " "
+        if len(msg) > 0:
+            msg = " you should follow " + msg
+            update_status.delay(msg, to=screen_name, taskid=taskid)
+        else:
+            send_dm.delay("You're following everyone already, yay!", screen_name)
 
 @app.task
 def send_dm(message, to):
     print "@"+to+message[:140]
 
 @app.task
-def update_status(message, to, replyto=None):
+def update_status(message, to, replyto=None, taskid=None):
+    if taskid is not None:
+    #Update status and mark task id as complete!
     print "@"+to+message[:140]
 
 @app.task
