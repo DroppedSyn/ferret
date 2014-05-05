@@ -3,24 +3,15 @@
 The Cigital Tech Ferret.
 
 
-## Install CouchDB
-1. Use your package manager or install CouchDB [from source](http://couchdb.apache.org/).
-2. Install the couchDB client for python, e.g. `pip install couchdb`
-3. Create a DB either via CouchDB's web interface (Futon) or using the client. You want to create a `direct_messages` database, as well as a database to store
-tracked terms. The name is defined in `settings.py`
-4. Change the database names to the ones you just created to dump all tracked tweets and direct messages.
+## Install pre-requisites
+1. Install this using your package manager (for Ubuntu/Debian, you may want to install the latest version from here: http://www.postgresql.org/download/linux/ubuntu/)
+2. Install `rabbitmq` and `couchdb`
+3. Set up a postgres database. If you create a database called `$USER` you do not require a password to connect to it locally. To do this, run `createtb -U <your username>`. This is good enough for our purposes.
+
 
 ## To run the bot
-1. Checkout this repository
+1. Checkout this repository in a python virtual environment
+2. Run `pip install -r requirements.txt`
 2. Create a `settings.py` file (see `settings.py.dist` for an example)
-3. Install `tweepy` either in a python virtual environment or systemwide (e.g. `pip install tweepy`)
-4. Run `ferret.py`
+4. Run `celery beat` and `celery -A tasks worker --loglevel=info`. This starts up the scheduler and the task handler. This will be replaced by a `supervisord` file at some point.
 5. Follow the bot, send it DMs
-
-
-
-TODO
-====
-- Add tests
-- Add more docs
-- Fix the stupid re-auth hack we're using to call the DMHandler
