@@ -5,9 +5,11 @@ import tweepy
 import settings
 import utils
 from dmhandlers import DmCommandHandler
+import psycopg2
 
 app = Celery('ferret_tasks')
 app.config_from_object('celeryconfig')
+conn = psycopg2.connect("dbname=ritesh")
 
 def _get_api():
     auth = tweepy.OAuthHandler(settings.CONSUMER_KEY, settings.CONSUMER_SECRET)
@@ -15,16 +17,35 @@ def _get_api():
     api = tweepy.API(auth)
     return api
 
+def _get_sinceid(name):
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM SINCEID WHERE name = %s", (name,))
+    r = cur.fetchone()[0]
+    print r
+    return r
+
+def _set_sinceid(name, sinceid):
+    cur = conn.cursor()
+    cur.execute("UPDATE SINCEID SET value = %s WHERE name = %s", (sinceid,
+        name,))
+    conn.commit()
+
 @app.task
 def fetchdms():
     api = _get_api()
     a = utils.PrettyPrint.ratelimit(api.rate_limit_status(), 'direct_messages', 
             '/direct_messages')
     messages = None
-    if a['remaining'] >=1:
-        messages = api.direct_messages(since_id=0)
-    if messages is not None:
+    sinceid = _get_sinceid('dm_sinceid')
+    try:
+        messages = api.direct_messages(since_id=sinceid)
+    except TweepError as err:
+        print "Failed to fetch DMs: %s" %  (err['message'])
+        return False
+    if len(messages) is not 0:
         dmcommandhandler = DmCommandHandler(messages)
+        _set_sinceid('dm_sinceid', messages[0].id)
+    return True
 
 @app.task
 def check_if_follows(screen_name):
@@ -38,22 +59,39 @@ def check_if_follows(screen_name):
                 if item.screen_name == screen_name:
                     out[person] = item.following
         except TweepError as err:
-            print "Failed for %s due to %s" % (screen_name, err['message'])
-            return
+            print "Failed to check follows for %s" % (screen_name)
+            return False
     msg = u''
     for k, v in out.iteritems():
         if v is False:
-            msg = msg + k + " "
-    update_status.delay(msg, to=screen_name)
+            msg = msg + "@"+ k + " "
+    if len(msg) > 0:
+        msg = "You should follow" + msg
+        update_status.delay(msg, to=screen_name)
+    else:
+        send_dm.delay("You're following everyone already, yay!", screen_name)
 
 @app.task
-def send_dm(message):
-    pass
+def send_dm(message, to):
+    print message[:140], to
 
 @app.task
-def update_status(message, to=None):
-    print "Updated status lol.Very API much WOW"
+def update_status(message, to=None, replyto=None):
+    print message[:140]
 
 @app.task
 def reply_to_status(message):
     pass
+
+@app.task
+def fetch_tracked_terms():
+    pass
+
+@app.task
+def process_tracked_terms():
+    pass
+
+@app.task
+def commend_user(message):
+    pass
+
