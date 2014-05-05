@@ -9,7 +9,7 @@ import psycopg2
 
 app = Celery('ferret_tasks')
 app.config_from_object('celeryconfig')
-conn = psycopg2.connect("dbname=ritesh")
+conn = psycopg2.connect(settings.PGDBNAME)
 
 def _get_api():
     auth = tweepy.OAuthHandler(settings.CONSUMER_KEY, settings.CONSUMER_SECRET)
@@ -66,18 +66,18 @@ def check_if_follows(screen_name):
         if v is False:
             msg = msg + "@"+ k + " "
     if len(msg) > 0:
-        msg = "You should follow" + msg
+        msg = " you should follow " + msg
         update_status.delay(msg, to=screen_name)
     else:
         send_dm.delay("You're following everyone already, yay!", screen_name)
 
 @app.task
 def send_dm(message, to):
-    print message[:140], to
+    print "@"+to+message[:140]
 
 @app.task
-def update_status(message, to=None, replyto=None):
-    print message[:140]
+def update_status(message, to, replyto=None):
+    print "@"+to+message[:140]
 
 @app.task
 def reply_to_status(message):
