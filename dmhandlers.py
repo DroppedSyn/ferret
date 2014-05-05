@@ -1,50 +1,37 @@
-from tweepy import API
 from settings import LIST_OF_PEOPLE
-from commands import COMMANDS
-
+import tasks
 
 class DmCommandHandler():
-    def __init__(self, auth):
-        self.auth = auth
-        self.api = API(self.auth)
+    def __init__(self, messages):
+        self.messages = messages
         self.commands = {
-            "check me out": self.__check_if_follows,
-            "i am": self.__verify_user,
+            "check me out": self._check_if_follows,
+            "i am": self._verify_user,
         }
+        self._parse_messages()
 
-    def handle_dm_command(self, message):
-        command = message.text.strip().lower()
-        print "Command", command
+    def _parse_messages(self):
+        command = None
+        for message in self.messages:
+            command = message.text.strip().lower()
+            try:
+                self.commands[command](message)
+            except KeyError:
+                print "Not a command, plain ol DM"
+
+    def _handle_dm_command(self, message):
         try:
             self.commands[command](message)
         except KeyError:
             print "No idea what what %s is meant to do." % command
 
-    def __check_if_follows(self, message):
+    def _check_if_follows(self, message):
         """
         Check if screen_name follows the users we want (defined in settings)
         """
-        if message.sender.screen_name is None:
-            return
-        out = {}
-        for person in LIST_OF_PEOPLE:
-            # This returns two friendship object, the first one tells us if source follows target
-            # and the second one tells us if target follows source. We're only interested in the
-            # first for now.
-            output = self.api.show_friendship(source_screen_name=message.sender.screen_name,
-                                              target_screen_name=person)
-            for item in output:
-                if item.screen_name == message.sender.screen_name:
-                    out[person] = item.following
-        s =  ""
-        for k, v in out.iteritems():
-                if v is False:
-                        s = s + k + " "
-        print "You should follow %s" %s
+        tasks.check_if_follows.delay(message.sender.screen_name)
 
-        return out
-
-    def __verify_user(self, direct_message=None, email_verified=False):
+    def _verify_user(self, direct_message=None, email_verified=False):
         """
         Allow users to claim twitter IDs
         if they say I am rksinha, then the DM sender is mapped to that twitter ID
@@ -61,6 +48,3 @@ class DmCommandHandler():
         if email_verified is True:
             # Mark email as verified! They are who they say they are.
             pass
-
-    def send_dm(self, screen_name=None, message=None):
-        pass
