@@ -15,3 +15,7 @@ The Cigital Tech Ferret.
 2. Create a `settings.py` file (see `settings.py.dist` for an example)
 4. Run `celery beat` and `celery -A tasks worker --loglevel=info`. This starts up the scheduler and the task handler. This will be replaced by a `supervisord` file at some point.
 5. Follow the bot, send it DMs
+
+## TODO:
+Refactor the DB queries
+More tests!
