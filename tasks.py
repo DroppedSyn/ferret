@@ -6,6 +6,7 @@ import settings
 import utils
 from dmhandlers import DmCommandHandler
 import psycopg2
+from tweepy import TweepError
 
 app = Celery('ferret_tasks')
 app.config_from_object('celeryconfig')
@@ -94,8 +95,14 @@ def send_dm(message, to):
 def update_status(message, to, replyto=None, taskid=None):
     if taskid is not None:
         try:
-            print "@"+to+message[:140]
+            status = "@%s %s" % (to, message[:140])
+            api = _get_api()
+            api.update_status(status)
             #Set task as complete in DB
+            cur = conn.cursor()
+            cur.execute("""UPDATE TASKS SET COMPLETED = TRUE WHERE ID = %s""",
+                    (taskid,))
+            conn.commit()
         except TweepError as err:
             "Fail!"
     else:
