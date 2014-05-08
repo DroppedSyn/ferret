@@ -3,6 +3,17 @@ __author__ = 'ritesh'
 Nicked from : http://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
 """
 import time
+def get_hits_left(r, api_name, api_url):
+    """
+    Returns number of hits left!
+    """
+    return r['resources'][api_name][api_url]['remaining']
+
+def ratelimit(r, api_name, api_url):
+    reset = r['resources'][api_name][api_url]['reset']
+    remaining= r['resources'][api_name][api_url]['remaining']
+    t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(reset))
+    return {'remaining': remaining, 'reset': t}
 
 class bcolors:
     HEADER = '\033[95m'
@@ -19,15 +30,3 @@ class bcolors:
         self.WARNING = ''
         self.FAIL = ''
         self.ENDC = ''
-
-class PrettyPrint:
-    @staticmethod
-    def ratelimit(r, api_name, api_url):
-        """
-        Pretty print the twitter rate limit
-        """
-        reset = r['resources'][api_name][api_url]['reset']
-        remaining= r['resources'][api_name][api_url]['remaining']
-        t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(reset))
-        print "We have %d calls left until %s" % (remaining, t)
-        return {'remaining': remaining, 'reset': reset}

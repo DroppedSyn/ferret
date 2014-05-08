@@ -9,7 +9,7 @@ class DmCommandHandler():
                 "check me out": self._check_if_follows,
                 "i am": self._verify_user,
                 }
-        self.conn = psyopg2.connect(settings.PGDBNAME)
+        self.conn = psycopg2.connect(settings.PGDBNAME)
         self._parse_messages()
 
     def _parse_messages(self):
@@ -33,9 +33,8 @@ class DmCommandHandler():
         """
         cur = self.conn.cursor()
         cur.execute("SET TIMEZONE='UTC'")
-        cur.execute("INSERT INTO TASKS(name, data, completed, tstamp) VALUES (%s, %s,
-                        %s, %s)", ('checkiffollows', 'screen_name', 'FALSE',
-                        'NOW()',))
+        cur.execute("""INSERT INTO TASKS(name, data, completed, tstamp) VALUES (%s, %s,
+                        %s, %s)""", ('checkiffollows', 'screen_name', 'FALSE', 'NOW()',))
         #tasks.check_if_follows.delay(message.sender.screen_name)
 
     def _verify_user(self, direct_message=None, email_verified=False):

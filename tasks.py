@@ -33,8 +33,10 @@ def _set_sinceid(name, sinceid):
 @app.task
 def fetchdms():
     api = _get_api()
-    a = utils.PrettyPrint.ratelimit(api.rate_limit_status(), 'direct_messages', 
+    hits = utils.get_hits_left(api.rate_limit_status(), 'direct_messages',
             '/direct_messages')
+    if hits < 1:
+        return
     messages = None
     sinceid = _get_sinceid('dm_sinceid')
     try:
@@ -51,17 +53,18 @@ def fetchdms():
 def check_if_follows():
     #Check API limits
     api = _get_api()
-    hits_left = utils.get_hits_left(api.rate_limit_status(), 'show_friendship')
+    hits_left = utils.get_hits_left(api.rate_limit_status(), 'friendships',
+            '/friendships/lookup')
     if hits_left < 1:
+        print "WARN: Ran out of API hits, will try again"
         return
     cur = conn.cursor()
-    cur.execute("SELECT id, data from TASKS WHERE name = %s AND completed =
-    FALSE ORDER BY tstamp ASC LIMIT %s", ('checkiffollows', hits_left))
+    cur.execute("""SELECT name, data from TASKS WHERE name = %s AND completed =
+    FALSE ORDER BY tstamp ASC LIMIT %s""", ('checkiffollows', hits_left))
     for record in cur:
         if record is None:
             return
-        taskid = record[0]
-        screen_name = record[1]
+        taskid, screen_name = record[:2]
         out = {}
         for person in settings.LIST_OF_PEOPLE:
             try:
@@ -90,8 +93,13 @@ def send_dm(message, to):
 @app.task
 def update_status(message, to, replyto=None, taskid=None):
     if taskid is not None:
-    #Update status and mark task id as complete!
-    print "@"+to+message[:140]
+        try:
+            print "@"+to+message[:140]
+            #Set task as complete in DB
+        except TweepError as err:
+            "Fail!"
+    else:
+        print "No task, calling update anyway"
 
 @app.task
 def reply_to_status(message):
@@ -108,4 +116,3 @@ def process_tracked_terms():
 @app.task
 def commend_user(message):
     pass
-
