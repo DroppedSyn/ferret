@@ -6,5 +6,9 @@ CELERYBEAT_SCHEDULE = {
             'task': 'tasks.fetchdms',
             'schedule': timedelta(minutes=2)
             },
+         'check-if-follows': {
+            'task': 'tasks.check_if_follows',
+            'schedule': timedelta(minutes=2)
+            }
         }
 CELERY_TIMEZONE = 'UTC'
