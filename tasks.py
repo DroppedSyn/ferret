@@ -82,7 +82,7 @@ def check_if_follows():
             if v is False:
                 msg = msg + "@"+ k + " "
         if len(msg) > 0:
-            msg = " you should follow " + msg
+            msg = "you should follow " + msg
             update_status.delay(msg, to=screen_name, taskid=taskid)
         else:
             send_dm.delay("You're following everyone already, yay!", screen_name)
@@ -100,8 +100,9 @@ def update_status(message, to, replyto=None, taskid=None):
             api.update_status(status)
             #Set task as complete in DB
             cur = conn.cursor()
+            cur = cur.execute("SET TIMEZONE = 'UTC' ")
             cur.execute("""UPDATE TASKS SET COMPLETED = TRUE WHERE ID = %s""",
-                    (taskid,))
+                    (int(taskid),))
             conn.commit()
         except TweepError as err:
             "Fail!"

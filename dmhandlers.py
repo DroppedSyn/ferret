@@ -35,6 +35,7 @@ class DmCommandHandler():
         cur.execute("SET TIMEZONE='UTC'")
         cur.execute("""INSERT INTO TASKS(name, data, completed, tstamp) VALUES (%s, %s,
                         %s, %s)""", ('checkiffollows', 'screen_name', 'FALSE', 'NOW()',))
+        cur.commit()
         #tasks.check_if_follows.delay(message.sender.screen_name)
 
     def _verify_user(self, direct_message=None, email_verified=False):
