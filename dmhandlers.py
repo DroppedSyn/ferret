@@ -1,5 +1,4 @@
 import settings
-import tasks
 import psycopg2
 
 class DmCommandHandler():
@@ -21,21 +20,18 @@ class DmCommandHandler():
             except KeyError:
                 print "Not a command, plain ol DM"
 
-    def _handle_dm_command(self, message):
-        try:
-            self.commands[command](message)
-        except KeyError:
-            print "No idea what what %s is meant to do." % command
-
     def _check_if_follows(self, message):
         """
         Check if screen_name follows the users we want (defined in settings)
         """
+        print "Entering CHECK IF FOLLOWS"
+        screen_name = message.sender.screen_name
+        print screen_name
         cur = self.conn.cursor()
         cur.execute("SET TIMEZONE='UTC'")
         cur.execute("""INSERT INTO TASKS(name, data, completed, tstamp) VALUES (%s, %s,
-                        %s, %s)""", ('checkiffollows', 'screen_name', 'FALSE', 'NOW()',))
-        cur.commit()
+                        %s, %s)""", ('checkiffollows', screen_name, 'FALSE', 'NOW()',))
+        self.conn.commit()
         #tasks.check_if_follows.delay(message.sender.screen_name)
 
     def _verify_user(self, direct_message=None, email_verified=False):

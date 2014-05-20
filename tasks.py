@@ -43,11 +43,14 @@ def fetchdms():
     try:
         messages = api.direct_messages(since_id=sinceid)
     except TweepError as err:
-        print "Failed to fetch DMs: %s" %  (err['message'])
+        print "Failed to fetch DMs", err
         return False
     if len(messages) is not 0:
+        print "CALLING DMCOMMANDHANDLER WITH", messages
         dmcommandhandler = DmCommandHandler(messages)
         _set_sinceid('dm_sinceid', messages[0].id)
+    else:
+        print "No NEW messages yet!"
     return True
 
 @app.task
@@ -83,7 +86,8 @@ def check_if_follows():
                 msg = msg + "@"+ k + " "
         if len(msg) > 0:
             msg = "you should follow " + msg
-            update_status.delay(msg, to=screen_name, taskid=taskid)
+            print msg
+            #update_status.delay(msg, to=screen_name, taskid=taskid)
         else:
             send_dm.delay("You're following everyone already, yay!", screen_name)
 
