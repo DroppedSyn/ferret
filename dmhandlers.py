@@ -24,7 +24,6 @@ class DmCommandHandler():
         """
         Check if screen_name follows the users we want (defined in settings)
         """
-        print "Entering CHECK IF FOLLOWS"
         screen_name = message.sender.screen_name
         print screen_name
         cur = self.conn.cursor()
@@ -32,7 +31,6 @@ class DmCommandHandler():
         cur.execute("""INSERT INTO TASKS(name, data, completed, tstamp) VALUES (%s, %s,
                         %s, %s)""", ('checkiffollows', screen_name, 'FALSE', 'NOW()',))
         self.conn.commit()
-        #tasks.check_if_follows.delay(message.sender.screen_name)
 
     def _verify_user(self, direct_message=None, email_verified=False):
         """

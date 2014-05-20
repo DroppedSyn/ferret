@@ -46,11 +46,10 @@ def fetchdms():
         print "Failed to fetch DMs", err
         return False
     if len(messages) is not 0:
-        print "CALLING DMCOMMANDHANDLER WITH", messages
         dmcommandhandler = DmCommandHandler(messages)
         _set_sinceid('dm_sinceid', messages[0].id)
     else:
-        print "No NEW messages yet!"
+        print "No new DMs yet!"
     return True
 
 @app.task
@@ -63,12 +62,12 @@ def check_if_follows():
         print "WARN: Ran out of API hits, will try again"
         return
     cur = conn.cursor()
-    cur.execute("""SELECT name, data from TASKS WHERE name = %s AND completed =
+    cur.execute("""SELECT id, name, data from TASKS WHERE name = %s AND completed =
     FALSE ORDER BY tstamp ASC LIMIT %s""", ('checkiffollows', hits_left))
     for record in cur:
         if record is None:
             return
-        taskid, screen_name = record[:2]
+        taskid, name, screen_name = record[:3]
         out = {}
         for person in settings.LIST_OF_PEOPLE:
             try:
@@ -78,6 +77,7 @@ def check_if_follows():
                     if item.screen_name == screen_name:
                         out[person] = item.following
             except TweepError as err:
+                #TODO: Show errors properly
                 print "Failed to check follows for %s" % (screen_name)
                 return False
         msg = u''
@@ -87,7 +87,7 @@ def check_if_follows():
         if len(msg) > 0:
             msg = "you should follow " + msg
             print msg
-            #update_status.delay(msg, to=screen_name, taskid=taskid)
+            update_status.delay(msg, screen_name, taskid=taskid)
         else:
             send_dm.delay("You're following everyone already, yay!", screen_name)
 
@@ -100,11 +100,12 @@ def update_status(message, to, replyto=None, taskid=None):
     if taskid is not None:
         try:
             status = "@%s %s" % (to, message[:140])
+            print status, taskid
             api = _get_api()
             api.update_status(status)
             #Set task as complete in DB
             cur = conn.cursor()
-            cur = cur.execute("SET TIMEZONE = 'UTC' ")
+            cur.execute("SET TIMEZONE = 'UTC' ")
             cur.execute("""UPDATE TASKS SET COMPLETED = TRUE WHERE ID = %s""",
                     (int(taskid),))
             conn.commit()
