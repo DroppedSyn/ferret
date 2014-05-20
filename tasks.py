@@ -93,7 +93,12 @@ def check_if_follows():
 
 @app.task
 def send_dm(message, to):
-    print "@"+to+message[:140]
+    #TODO: Handle fails by saving to DB
+    api = _get_api()
+    try:
+        api.send_direct_message(screen_name=to, message)
+    except TweepError:
+        print "Failed to send %s to %s" % (message, to)
 
 @app.task
 def update_status(message, to, replyto=None, taskid=None):
@@ -127,5 +132,10 @@ def process_tracked_terms():
     pass
 
 @app.task
-def commend_user(message):
-    pass
+def commend_user(to, message=None):
+    if message is None:
+        send_dm.delay("Your rate of awesomeness grows exponentially!", to)
+
+if __name__ == '__main__':
+    print "Testing!"
+    #commend_user("rsinha")
