@@ -89,16 +89,22 @@ def check_if_follows():
             print msg
             update_status.delay(msg, screen_name, taskid=taskid)
         else:
-            send_dm.delay("You're following everyone already, yay!", screen_name)
+            send_dm.delay(screen_name, "You're following everyone already, yay!")
+            #Mark as complete
+            cur = conn.cursor()
+            cur.execute("SET TIMEZONE = 'UTC'; ")
+            cur.execute("""UPDATE TASKS SET COMPLETED = TRUE WHERE ID = %s""",
+                    (int(taskid),))
 
 @app.task
-def send_dm(message, to):
-    #TODO: Handle fails by saving to DB
+def send_dm(to, message):
+    #TODO: Handle fails by saving to DB ?
     api = _get_api()
     try:
-        api.send_direct_message(screen_name=to, message)
-    except TweepError:
+        api.send_direct_message(screen_name=to, text=message)
+    except TweepError as t:
         print "Failed to send %s to %s" % (message, to)
+        print t
 
 @app.task
 def update_status(message, to, replyto=None, taskid=None):
@@ -134,8 +140,8 @@ def process_tracked_terms():
 @app.task
 def commend_user(to, message=None):
     if message is None:
-        send_dm.delay("Your rate of awesomeness grows exponentially!", to)
+        send_dm.delay(to, "Your rate of awesomeness grows exponentially!")
 
 if __name__ == '__main__':
     print "Testing!"
-    #commend_user("rsinha")
+    #commend_user("@rsinha")
