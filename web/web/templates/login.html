@@ -1,0 +1,31 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% block scripts %}
+{% endblock %}
+{% block content %}
+<title> Check me out!</title>
+<div class="container theme-showcase" role="main">
+    <div class ="jumbotron">
+    <h1>Are you following everyone?</h1>
+        <p> To check if you follow some key Cigital tweeters, login with your twitter account. We do not store your
+         Twitter credentials and authorization tokens generated are only used to determine if you follow certain people.</p>
+        {% if not follows %}
+        <p><a href="{{ url_for('login') }}" class="btn btn-primary btn-lg" role="button">Sign in with twitter &raquo;</a></p>
+        {% endif %}
+    </div>
+{% for message in get_flashed_messages() %}
+{{ message }}
+{% endfor %}
+{% if follows %}
+        {% for key, value in follows.iteritems() %}
+           {% if value == True %}
+           <p>You're already following {{key[0] | e }} </p>
+           {% else %}
+           <p>You should follow {{key[0] | e }} <a href="https://twitter.com/{{ key[1] | e }}" class="btn btn-primary btn-lg" role="button">@{{ key[1] | e }}</a>
+           {% endif %}
+        {% endfor %}
+{% else %}
+{% endif %}
+</div>
+{% endblock %}
