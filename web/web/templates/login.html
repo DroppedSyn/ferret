@@ -1,7 +1,11 @@
 {% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
 {% import "bootstrap/fixes.html" as fixes %}
+{% block head %}
+{{super()}}
+{{fixes.ie8()}}
+{% endblock %}
 {% block scripts %}
+{{super()}}
 {% endblock %}
 {% block content %}
 <title> Check me out!</title>
@@ -15,14 +19,17 @@
         {% endif %}
     </div>
 {% for message in get_flashed_messages() %}
+<div class="alert alert-danger alert-dismissable">
 {{ message }}
+<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
 {% endfor %}
 {% if follows %}
         {% for key, value in follows.iteritems() %}
            {% if value == True %}
-           <p>You're already following {{key[0] | e }} </p>
+           <h3>You're already following {{key[0] | e }} </h3>
            {% else %}
-           <p>You should follow {{key[0] | e }} <a href="https://twitter.com/{{ key[1] | e }}" class="btn btn-primary btn-lg" role="button">@{{ key[1] | e }}</a>
+           <h3>You should follow {{key[0] | e }} <a href="https://twitter.com/{{ key[1] | e }}" class="btn btn-primary btn-lg" role="button">@{{ key[1] | e }}</a> </h3>
            {% endif %}
         {% endfor %}
 {% else %}
