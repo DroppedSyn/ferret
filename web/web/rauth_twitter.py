@@ -119,11 +119,12 @@ def authorized():
     verify = sess.get('account/verify_credentials.json',
                       params={'format': 'json'}).json()
     follows = {}
+
     for person in settings.LIST_OF_PEOPLE:
         f = sess.get('friendships/show.json', params={'format':
                                                           'json', 'target_screen_name': person, 'source_screen_name':
                                                           verify['screen_name']}).json()
-        follows[(settings.LIST_OF_NAMES[person],person)] = f['relationship']['target']['following']
+        follows[(settings.LIST_OF_NAMES[person],person)] = f['relationship']['source']['following']
     return render_template('login.html', follows=follows)
 
     #User.get_or_create(verify['screen_name'], verify['id'], oauth_verifier, request_token,
