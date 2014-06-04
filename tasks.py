@@ -21,9 +21,11 @@ def _get_api():
 def _get_sinceid(name):
     cur = conn.cursor()
     cur.execute("SELECT value FROM SINCEID WHERE name = %s", (name,))
-    r = cur.fetchone()[0]
-    print r
-    return r
+    r = cur.fetchone()
+    if r is not None:
+        return r[0]
+    else:
+        return 0
 
 def _set_sinceid(name, sinceid):
     cur = conn.cursor()
