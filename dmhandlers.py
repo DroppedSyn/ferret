@@ -1,13 +1,10 @@
 import settings
 import psycopg2
+import re
 
 class DmCommandHandler():
     def __init__(self, messages):
         self.messages = messages
-        self.commands = {
-                "check me out": self._check_if_follows,
-                "i am": self._verify_user,
-                }
         self.conn = psycopg2.connect(settings.PGDBNAME)
         self._parse_messages()
 
@@ -15,37 +12,31 @@ class DmCommandHandler():
         command = None
         for message in self.messages:
             command = message.text.strip().lower()
-            try:
-                self.commands[command](message)
-            except KeyError:
-                print "Not a command, plain ol DM"
+            if re.search(r"^i am", command) is not None:
+                i = command.split()
+                email = i[2]
+                twitter_handle = message.sender.screen_name
+                print "TW Handle", twitter_handle
+                self.verify_user(email, twitter_handle, email_verified=False)
 
-    def _check_if_follows(self, message):
-        """
-        Check if screen_name follows the users we want (defined in settings)
-        """
-        screen_name = message.sender.screen_name
-        print screen_name
-        cur = self.conn.cursor()
-        cur.execute("SET TIMEZONE='UTC'")
-        cur.execute("""INSERT INTO TASKS(name, data, completed, tstamp) VALUES (%s, %s,
-                        %s, %s)""", ('checkiffollows', screen_name, 'FALSE', 'NOW()',))
-        self.conn.commit()
-
-    def _verify_user(self, direct_message=None, email_verified=False):
+    @staticmethod
+    def verify_user(email, twitter_handle, email_verified=False):
         """
         Allow users to claim twitter IDs
         if they say I am rksinha, then the DM sender is mapped to that twitter ID
-        Expects a tweepy direct message object
         """
-        if direct_message is not None:
-            sender = direct_message["sender_screen_name"]
-            text = direct_message["text"]
-            # Use a regex match, instead of a simple split
-            email = text.split()[2]
-            # If email not in DB, return False
-            # Else map email to twitter ID but mark email verified as False in DB
-            # Send verification email
+
+        conn = psycopg2.connect(settings.PGDBNAME)
+        cur = conn.cursor()
         if email_verified is True:
-            # Mark email as verified! They are who they say they are.
-            pass
+            cur.execute("UPDATE VERIFIED SET verified = TRUE where twitter_handle = %s", (twitter_handle,))
+            conn.commit()
+        else:
+            cur.execute("SELECT email FROM VERIFIED WHERE email = %s", (email,))
+            r = cur.fetchone()
+            print r
+            if r is not None:
+                cur.execute("UPDATE VERIFIED SET twitter_handle = %s WHERE email = %s", (twitter_handle, email,))
+                conn.commit()
+# Send email to verify
+        conn.close()

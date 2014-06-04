@@ -53,50 +53,6 @@ def fetchdms():
     return True
 
 @app.task
-def check_if_follows():
-    #Check API limits
-    api = _get_api()
-    hits_left = utils.get_hits_left(api.rate_limit_status(), 'friendships',
-            '/friendships/lookup')
-    if hits_left < 1:
-        print "WARN: Ran out of API hits, will try again"
-        return
-    cur = conn.cursor()
-    cur.execute("""SELECT id, name, data from TASKS WHERE name = %s AND completed =
-    FALSE ORDER BY tstamp ASC LIMIT %s""", ('checkiffollows', hits_left))
-    for record in cur:
-        if record is None:
-            return
-        taskid, name, screen_name = record[:3]
-        out = {}
-        for person in settings.LIST_OF_PEOPLE:
-            try:
-                output = api.show_friendship(source_screen_name = screen_name,
-                        target_screen_name = person)
-                for item in output:
-                    if item.screen_name == screen_name:
-                        out[person] = item.following
-            except TweepError as err:
-                #TODO: Show errors properly
-                print "Failed to check follows for %s" % (screen_name)
-                return False
-        msg = u''
-        for k, v in out.iteritems():
-            if v is False:
-                msg = msg + "@"+ k + " "
-        if len(msg) > 0:
-            msg = "you should follow " + msg
-            print msg
-            update_status.delay(msg, screen_name, taskid=taskid)
-        else:
-            send_dm.delay(screen_name, "You're following everyone already, yay!")
-            #Mark as complete
-            cur = conn.cursor()
-            cur.execute("SET TIMEZONE = 'UTC'; ")
-            cur.execute("""UPDATE TASKS SET COMPLETED = TRUE WHERE ID = %s""",
-                    (int(taskid),))
-
-@app.task
 def send_dm(to, message):
     #TODO: Handle fails by saving to DB ?
     api = _get_api()
