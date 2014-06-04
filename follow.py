@@ -2,7 +2,7 @@ from tweepy import API, Cursor
 from tweepy.utils import import_simplejson, urlencode_noplus
 
 json = import_simplejson()
-
+# Sample code for using the twitter follow API
 
 class Follow():
     def __init__(self, auth):
