@@ -33,6 +33,14 @@ def _set_sinceid(name, sinceid):
         name,))
     conn.commit()
 
+
+@app.task
+def check_if_follows():
+    print("huah")
+    apt = _get_api()
+    for user in tweepy.Cursor(apt.followers, screen_name="CigiBot").items():
+	print user.screen_name
+
 @app.task
 def fetchdms():
     api = _get_api()

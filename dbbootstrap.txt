@@ -10,3 +10,8 @@ CREATE TABLE IF NOT EXISTS VERIFIED(id serial PRIMARY KEY, email varchar, twitte
 /* Test data */
 INSERT INTO VERIFIED(email, twitter_handle, verified) values ('rksinha', 'rsinha', DEFAULT);
 INSERT INTO VERIFIED(email, twitter_handle, verified) values ('paco', 'pacohope', DEFAULT);
+
+
+/*Test Tweets Table*/
+DROP TABLE IF EXISTS TWEET;
+CREATE TABLE TWEET(id character varying(1024) NOT NULL, doc hstore, constraint pkey PRIMARY KEY(id)) WITH (OIDS=FALSE);
