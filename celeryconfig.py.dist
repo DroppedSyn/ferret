@@ -1,6 +1,6 @@
 from datetime import timedelta
 BROKER_URL = 'amqp://'
-CELERY_RESULT_BACKEND = 'db+postgresql://ritesh@/ritesh'
+CELERY_RESULT_BACKEND = 'db+postgresql://rannekk@/rannekk'
 CELERYBEAT_SCHEDULE = {
         'fetch-direct-messages-every-2min': {
             'task': 'tasks.fetchdms',
