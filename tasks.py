@@ -8,6 +8,7 @@ from dmhandlers import DmCommandHandler
 import psycopg2
 from tweepy import TweepError
 
+
 app = Celery('ferret_tasks')
 app.config_from_object('celeryconfig')
 conn = psycopg2.connect(settings.PGDBNAME)
@@ -33,6 +34,21 @@ def _set_sinceid(name, sinceid):
         name,))
     conn.commit()
 
+    
+
+@app.task
+def refresh_followers():
+    apt = _get_api()
+    cur = conn.cursor()
+    for user in tweepy.Cursor(apt.followers, screen_name="CigiBot").items():
+	print"[i]Inserting ---------"
+	print user.id
+	print user.screen_name
+        cur.execute("INSERT INTO FOLLOWER (id,screen_name) SELECT %s, %s WHERE NOT EXISTS (SELECT id FROM FOLLOWER WHERE id = %s)", (str(user.id), user.screen_name, str(user.id)))
+	print"----------------------"
+    conn.commit()
+    print"[i+]Doon laddy!"
+ 
 
 @app.task
 def check_if_follows():

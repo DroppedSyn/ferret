@@ -12,11 +12,20 @@ import json
 from settings import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
 
 
-def checkFollowing(userIDs, tweetID):
-    for id in userIDs:
-	if (tweetID = id):
-	return true    
-    return false
+def checkIsTweetFromFollower(tweet):
+    conn = psycopg2.connect(settings.PGDBNAME)
+    cur = conn.cursor()
+    id = str(tweet["user"]["id"])
+    #print'bla: ' + id
+    cur.execute("SELECT id FROM FOLLOWER WHERE id = %s", [id])
+    results = cur.fetchall()
+    #print results
+    conn.close()
+    if len(results) > 0:
+	return True
+    return False
+
+
 
 def createTweetDict(tweet):
     tweetDict = []
@@ -53,14 +62,15 @@ def createTweetDict(tweet):
     print tweetDict
     return tweetDict
 
-def persistTweetDict(tweets):
+def persistTweetDict(data):
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
-    convertedTweets = createTweetDict(tweets)
+    convertedTweets = createTweetDict(data)
     try:
-	cur.execute("INSERT INTO tweet(id, doc) VALUES(%s, hstore(%s))", ("%d-%d" % (tweets["id"], time.time()), convertedTweets))
+	cur.execute("INSERT INTO tweet(id, doc) VALUES(%s, hstore(%s))", ("%d-%d" % (data["id"], time.time()), convertedTweets))
 	conn.commit()
 	print"[!+] persisted"
+	#conn.close()
     except Exception as e:
 	    conn.rollback()
 	    reset_cursor(conn)
@@ -68,6 +78,8 @@ def persistTweetDict(tweets):
 	    return
     if cur.lastrowid == None:
 	    print "[!-]Unable to save"
+    print checkIsTweetFromFollower(data) 
+
 
 def reset_cursor(c):
     cursor=c.cursor()
@@ -100,4 +112,4 @@ if __name__ == '__main__':
     a = API(auth)
     l = StdOutListener()
     stream = Stream(auth, l, timeout=None)
-    stream.filter(track=['SuarezDentalTips'])
+    stream.filter(track=['testingDisregard'])

@@ -2,16 +2,19 @@
 CREATE TABLE IF NOT EXISTS SINCEID(id serial PRIMARY KEY, name varchar, value bigint DEFAULT 0);
 
 /* Unused */
-CREATE TABLE IF NOT EXISTS FOLLOWERS(id serial PRIMARY KEY, screen_name varchar);
+CREATE TABLE IF NOT EXISTS FOLLOWER(id character varying(1024) NOT NULL, screen_name varchar, constraint followerpkey PRIMARY KEY(id)) WITH (OIDS=FALSE);
 CREATE TABLE IF NOT EXISTS FOLLOWS(id serial PRIMARY KEY, screen_name varchar);
 
 /*For verifying users */
 CREATE TABLE IF NOT EXISTS VERIFIED(id serial PRIMARY KEY, email varchar, twitter_handle varchar, verified boolean default false);
-/* Test data */
+l/* Test data */
 INSERT INTO VERIFIED(email, twitter_handle, verified) values ('rksinha', 'rsinha', DEFAULT);
 INSERT INTO VERIFIED(email, twitter_handle, verified) values ('paco', 'pacohope', DEFAULT);
 
 
-/*Test Tweets Table*/
-DROP TABLE IF EXISTS TWEET;
-CREATE TABLE TWEET(id character varying(1024) NOT NULL, doc hstore, constraint pkey PRIMARY KEY(id)) WITH (OIDS=FALSE);
+/*Tweets Table*/
+/*DROP TABLE IF EXISTS TWEET;*/
+CREATE TABLE IF NOT EXISTS TWEET(id character varying(1024) NOT NULL, doc hstore, constraint pkey PRIMARY KEY(id)) WITH (OIDS=FALSE);
+
+
+/*Followers Table*/
