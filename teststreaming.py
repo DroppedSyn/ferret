@@ -11,9 +11,9 @@ import settings
 import json
 from settings import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
 
-a = 0
+a = 0     #Need this for api access (re-tweet)
 
-def checkIsTweetFromFollower(tweet):
+def checkIsTweetFromFollower(tweet):   #This function checks if a given tweet is from a user who is following us (THIS MIGHT HAVE TO BE REPLACED WITH THE VERIFIED TABLE IN THE FUTURE)
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
     cur.execute("SELECT id FROM FOLLOWER WHERE id = %s", [str(tweet["user"]["id"])]) #Magic! ('One, two, three, convert this id!')
@@ -23,7 +23,7 @@ def checkIsTweetFromFollower(tweet):
 	return True
     return False
 
-def checkIfFollowerHasTweetedBefore(tweet):
+def checkIfFollowerHasTweetedBefore(tweet):#This function checks if the user has tweeted before, by checking if the user is within the hastweeted table.
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
     cur.execute("SELECT user_id FROM HASTWEETED WHERE user_id = %s", [str(tweet["user"]["id"])]);
@@ -33,7 +33,8 @@ def checkIfFollowerHasTweetedBefore(tweet):
 	return True
     return False
 
-def screenAndHandleUser(tweet):
+def screenAndHandleUser(tweet): #This function checks if the user is a follower and if they have not tweeted before. If this is the case, it will re-tweet the users tweet, add them to the 
+				#hastweeted table, and re-tweet their tweet. 
     if checkIsTweetFromFollower(tweet) == True and checkIfFollowerHasTweetedBefore(tweet) == False: #If the user is a follower AND they have not tweeted yet.
 
 	try:
@@ -60,7 +61,7 @@ def screenAndHandleUser(tweet):
 	print"[!]user is not a follower. or user has already tweeted.."
 
 
-def createTweetDict(tweet):
+def createTweetDict(tweet): #this function creates a dict of the tweets, which can then be persisted.
     tweetDict = []
     
     for i in ["text", "favorited", "retweeted", "text"]:
@@ -95,7 +96,7 @@ def createTweetDict(tweet):
     print tweetDict
     return tweetDict
 
-def persistTweetDict(data):
+def persistTweetDict(data): #This function persists a dict of tweets.
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
     convertedTweets = createTweetDict(data)
