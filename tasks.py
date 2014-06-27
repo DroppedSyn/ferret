@@ -41,18 +41,18 @@ def refresh_followers():
     apt = _get_api()
     cur = conn.cursor()
     for user in tweepy.Cursor(apt.followers, screen_name="CigiBot").items():
-	print"[i]Inserting ---------"
-	print user.id
-	print user.screen_name
+	#print"[i]Inserting ---------"
+	#print user.id
+	#print user.screen_name
         cur.execute("INSERT INTO FOLLOWER (id,screen_name) SELECT %s, %s WHERE NOT EXISTS (SELECT id FROM FOLLOWER WHERE id = %s)", (str(user.id), user.screen_name, str(user.id)))
-	print"----------------------"
+	#print"----------------------"
     conn.commit()
-    print"[i+]Doon laddy!"
+    #print"[i+]Doon laddy!"
  
 
 @app.task
 def check_if_follows():
-    print("huah")
+    #print("huah")
     apt = _get_api()
     for user in tweepy.Cursor(apt.followers, screen_name="CigiBot").items():
 	print user.screen_name

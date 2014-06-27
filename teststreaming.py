@@ -44,11 +44,11 @@ def screenAndHandleUser(tweet): #This function checks if the user is a follower 
 
 	conn=psycopg2.connect(settings.PGDBNAME)
 	cur=conn.cursor()
-	print"User is a follower - User has not tweeted. Retweeting, Adding user."
+	#print"User is a follower - User has not tweeted. Retweeting, Adding user."
 	try:
 	    cur.execute("INSERT INTO HASTWEETED(user_id) VALUES (%s)", [str(tweet["user"]["id"])]);
             conn.commit()
-            print"[!+] persisted - user has been added to has tweeted."
+            #print"[!+] persisted - user has been added to has tweeted."
         except Exception as e:
             conn.rollback()
             reset_cursor(conn)
@@ -58,7 +58,7 @@ def screenAndHandleUser(tweet): #This function checks if the user is a follower 
             print "[!-]Unable to save"
 	conn.close()
     else:
-	print"[!]user is not a follower. or user has already tweeted.."
+	#print"[!]user is not a follower. or user has already tweeted.."
 
 
 def createTweetDict(tweet): #this function creates a dict of the tweets, which can then be persisted.
@@ -103,7 +103,7 @@ def persistTweetDict(data): #This function persists a dict of tweets.
     try:
 	cur.execute("INSERT INTO tweet(id, doc) VALUES(%s, hstore(%s))", ("%d-%d" % (data["id"], time.time()), convertedTweets))
 	conn.commit()
-	print"[!+] persisted"
+	#print"[!+] persisted"
 	#conn.close()
     except Exception as e:
 	    conn.rollback()
@@ -126,7 +126,7 @@ This is a basic listener that just prints received tweets to stdout.
 
     """
     def on_data(self, data):
-	print"Status Ding!"
+	#print"Status Ding!"
 	tweets = json.loads(data)
 	persistTweetDict(tweets)
     def on_error(self, error):
