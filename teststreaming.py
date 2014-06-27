@@ -6,14 +6,16 @@ from tweepy import Stream, error
 import time
 import psycopg2
 import psycopg2.extras
-import settings 
-#json = import_simplejson()
+import settings
 import json
 from settings import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
 
 a = 0     #Need this for api access (re-tweet)
 
-def checkIsTweetFromFollower(tweet):   #This function checks if a given tweet is from a user who is following us (THIS MIGHT HAVE TO BE REPLACED WITH THE VERIFIED TABLE IN THE FUTURE)
+def checkIsTweetFromFollower(tweet):
+    """
+    This function checks if a given tweet is from a user who is following us (THIS MIGHT HAVE TO BE REPLACED WITH THE VERIFIED TABLE IN THE FUTURE)
+    """
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
     cur.execute("SELECT id FROM FOLLOWER WHERE id = %s", [str(tweet["user"]["id"])]) #Magic! ('One, two, three, convert this id!')
@@ -23,7 +25,10 @@ def checkIsTweetFromFollower(tweet):   #This function checks if a given tweet is
 	return True
     return False
 
-def checkIfFollowerHasTweetedBefore(tweet):#This function checks if the user has tweeted before, by checking if the user is within the hastweeted table.
+def checkIfFollowerHasTweetedBefore(tweet):
+    """
+    This function checks if the user has tweeted before, by checking if the user is within the hastweeted table.
+    """
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
     cur.execute("SELECT user_id FROM HASTWEETED WHERE user_id = %s", [str(tweet["user"]["id"])]);
@@ -33,37 +38,40 @@ def checkIfFollowerHasTweetedBefore(tweet):#This function checks if the user has
 	return True
     return False
 
-def screenAndHandleUser(tweet): #This function checks if the user is a follower and if they have not tweeted before. If this is the case, it will re-tweet the users tweet, add them to the 
-				#hastweeted table, and re-tweet their tweet. 
-    if checkIsTweetFromFollower(tweet) == True and checkIfFollowerHasTweetedBefore(tweet) == False: #If the user is a follower AND they have not tweeted yet.
-
-	try:
-	    a.retweet(tweet["id"]) #Retweet the tweet!
-	except error.TweepError as te:
-	    print"A tweepy error occurred: ", te
-
-	conn=psycopg2.connect(settings.PGDBNAME)
-	cur=conn.cursor()
-	#print"User is a follower - User has not tweeted. Retweeting, Adding user."
-	try:
-	    cur.execute("INSERT INTO HASTWEETED(user_id) VALUES (%s)", [str(tweet["user"]["id"])]);
-            conn.commit()
-            #print"[!+] persisted - user has been added to has tweeted."
-        except Exception as e:
-            conn.rollback()
-            reset_cursor(conn)
-            print "[!-]Unable to save", e
-            return
-        if cur.lastrowid == None:
-            print "[!-]Unable to save"
-	conn.close()
+def screenAndHandleUser(tweet):
+    """
+    This function checks if the user is a follower and if they have not tweeted before. If this is the case, it will re-tweet the users tweet, add them to the 
+    hastweeted table, and re-tweet their tweet.  if checkIsTweetFromFollower(tweet) == True and checkIfFollowerHasTweetedBefore(tweet) == False: #If the user is a follower AND they have not tweeted yet.
+    """
+    try:
+        a.retweet(tweet["id"]) #Retweet the tweet!
+    except error.TweepError as te:
+        print"A tweepy error occurred: ", te
+    conn=psycopg2.connect(settings.PGDBNAME)
+    cur=conn.cursor()
+    #print"User is a follower - User has not tweeted. Retweeting, Adding user."
+    try:
+        cur.execute("INSERT INTO HASTWEETED(user_id) VALUES (%s)", [str(tweet["user"]["id"])]);
+        conn.commit()
+        #print"[!+] persisted - user has been added to has tweeted."
+    except Exception as e:
+        conn.rollback()
+        reset_cursor(conn)
+        print "[!-]Unable to save", e
+        return
+    if cur.lastrowid == None:
+        print "[!-]Unable to save"
+        conn.close()
     else:
-	#print"[!]user is not a follower. or user has already tweeted.."
+        pass
+    #print"[!]user is not a follower. or user has already tweeted.."
 
 
-def createTweetDict(tweet): #this function creates a dict of the tweets, which can then be persisted.
+def createTweetDict(tweet):
+    """
+    this function creates a dict of the tweets, which can then be persisted.
+    """
     tweetDict = []
-    
     for i in ["text", "favorited", "retweeted", "text"]:
 	tweetDict.append([i, unicode(tweet[i])])
 
@@ -92,11 +100,13 @@ def createTweetDict(tweet): #this function creates a dict of the tweets, which c
 	tweetDict.append(["screen_name",unicode(tweet["user"]["screen_name"])])
 	uts = '%014d' % long(time.mktime(time.strptime(tweet["user"]['created_at'], '%a %b %d %H:%M:%S +0000 %Y') ))
 	tweetDict.append(["user_created_at",uts])
-    
     print tweetDict
     return tweetDict
 
-def persistTweetDict(data): #This function persists a dict of tweets.
+def persistTweetDict(data):
+    """
+    This function persists a dict of tweets.
+    """
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
     convertedTweets = createTweetDict(data)
@@ -113,17 +123,16 @@ def persistTweetDict(data): #This function persists a dict of tweets.
     if cur.lastrowid == None:
 	    print "[!-]Unable to save"
     #print checkIsTweetFromFollower(data)
-    conn.close() 
-    screenAndHandleUser(data)    
+    conn.close()
+    screenAndHandleUser(data)
 
 def reset_cursor(c):
     cursor=c.cursor()
 
 
 class StdOutListener(StreamListener):
-    """ A listener handles tweets are the received from the stream.
-This is a basic listener that just prints received tweets to stdout.
-
+    """
+    A listener handles tweets are the received from the stream.
     """
     def on_data(self, data):
 	#print"Status Ding!"
