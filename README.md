@@ -11,10 +11,12 @@ The Cigital Tech Ferret.
 
 ## To run the bot
 1. Checkout this repository inside a python virtual environment. Activate the virtual environment (e.g. `source /home/ritesh/code/venvs/ferretbot/bin/activate`)
-2. Run `pip install -r requirements.txt` from within the ferret directory.
-2. Create a `settings.py` file (see `settings.py.dist` for an example)
-4. Run `./runcelery.sh` in one window and `celery beat` in another. This starts up the task handler and the scheduler. 
-5. See `tasks.py` for an example
+1. Run `pip install -r requirements.txt` from within the ferret directory.
+1. Create a `settings.py` file (see `settings.py.dist` for an example)
+1. Create a `celeryconfig.py` file (see `celeryconfig.py.dist` for an example)
+1. Run `./runcelery.sh` in one window and `celery beat` in another. This starts up the task handler and the scheduler. 
+1. Run `python streamsave.py` to save and process tweets (e.g. tweets with the #swsec hashtag)
+1. See `tasks.py` for a list of tasks 
 
 ## Next steps
 1. Add more tasks
