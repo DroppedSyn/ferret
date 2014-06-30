@@ -6,7 +6,10 @@ import utils
 import dmhandlers
 import psycopg2
 from tweepy import TweepError
-
+from email.mime.text import MIMEText
+from settings import EMAIL_ADDRESS, EMAIL_PW
+import smtplib
+from psycopg2 import ProgrammingError
 
 app = Celery('ferret_tasks')
 app.config_from_object('celeryconfig')
@@ -24,6 +27,7 @@ def _get_sinceid(name):
     cur = conn.cursor()
     cur.execute("SELECT value FROM SINCEID WHERE name = %s", (name,))
     r = cur.fetchone()
+    conn.commit()
     if r is not None:
         return r[0]
     else:
@@ -48,9 +52,9 @@ def refresh_followers():
             #print user.screen_name
             cur.execute("""INSERT INTO FOLLOWER (id,screen_name) SELECT %s, %s WHERE
                 NOT EXISTS (SELECT id FROM FOLLOWER WHERE id = %s)""", (str(user.id), user.screen_name, str(user.id)))
+            conn.commit()
     except TweepError as err:
-        raise refresh_followers.delay(countdown=60*3, exc=err)
-    conn.commit()
+        raise refresh_followers.retry(countdown=60*3, exc=err)
 
 
 @app.task
@@ -116,7 +120,13 @@ def link_user(email, twitter_handle):
     """
     cur = conn.cursor()
     cur.execute("SELECT email FROM VERIFIED WHERE email = %s", (email,))
-    r = cur.fetchone()
+    conn.commit()
+    print email
+    try:
+        r = cur.fetchone()
+    except ProgrammingError:
+        #No results!
+        return
     if r is not None:
         # random code for auth
         code = binascii.b2a_hex(os.urandom(4))
@@ -145,10 +155,13 @@ def check_auth_code(twitter_handle, code):
     """
     print "Checking auth for %s - %s" % (twitter_handle, code)
     cur = conn.cursor()
-    cur.execute("SELECT email, twitter_handle from VERIFIED WHERE code = %s", (code,))
-    result = cur.fetchone()
-    if result is None:
-        send_dm.delay(twitter_handle, "I do not understand this code :( ")
+    try:
+        cur.execute("SELECT email, twitter_handle from VERIFIED WHERE code = %s", (code,))
+        result = cur.fetchone()
+        conn.commit()
+    except ProgrammingError:
+        #No results!
+        send_dm.delay(twitter_handle, "I do not understand this code :(")
         return
     cur.execute("UPDATE VERIFIED SET verified = TRUE WHERE twitter_handle = %s", (twitter_handle,))
     conn.commit()
