@@ -14,7 +14,7 @@ from psycopg2 import ProgrammingError
 app = Celery('ferret_tasks')
 app.config_from_object('celeryconfig')
 conn = psycopg2.connect(settings.PGDBNAME)
-
+conn.autocommit = True
 
 def _get_api():
     auth = tweepy.OAuthHandler(settings.CONSUMER_KEY, settings.CONSUMER_SECRET)

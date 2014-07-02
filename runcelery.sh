@@ -1,1 +1,1 @@
-exec celery -A tasks worker --loglevel=info
+exec celery -A tasks worker --loglevel=warning
