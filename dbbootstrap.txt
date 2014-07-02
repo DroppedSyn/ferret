@@ -9,11 +9,9 @@ CREATE TABLE IF NOT EXISTS FOLLOWS(id serial PRIMARY KEY, screen_name varchar);
 
 /*For verifying users */
 DROP TABLE VERIFIED;
-CREATE TABLE IF NOT EXISTS VERIFIED(id serial PRIMARY KEY, email varchar, twitter_handle varchar, code varchar default 'deadbeef', verified boolean default false);
+CREATE TABLE IF NOT EXISTS VERIFIED(email varchar PRIMARY KEY, twitter_handle varchar default '', code varchar default 'deadbeef', verified boolean default false);
 
-/* Test data */
-INSERT INTO VERIFIED(email, twitter_handle, code, verified) values ('rksinha', 'rsinha', '0bad1dea', DEFAULT);
-INSERT INTO VERIFIED(email, twitter_handle, code, verified) values ('paco', 'pacohope', 'CAFED00D', DEFAULT);
+/* To populate the VERIFIED table, run populate_emails.sh */ 
 
 
 /*Tweets Table*/
