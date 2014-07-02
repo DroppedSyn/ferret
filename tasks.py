@@ -119,14 +119,9 @@ def link_user(email, twitter_handle):
     if they say I am rksinha, then the DM sender is mapped to that twitter ID
     """
     cur = conn.cursor()
-    cur.execute("SELECT email FROM VERIFIED WHERE email = %s", (email,))
-    conn.commit()
-    print email
-    try:
-        r = cur.fetchone()
-    except ProgrammingError:
-        #No results!
-        return
+    cur.execute("SELECT email FROM VERIFIED WHERE email = %s AND VERIFIED = FALSE", (email,))
+    print "Trying to verify %s" % (email,)
+    r = cur.fetchone()
     if r is not None:
         # random code for auth
         code = binascii.b2a_hex(os.urandom(4))
@@ -141,8 +136,8 @@ def link_user(email, twitter_handle):
               % (email, twitter_handle, twitter_handle, code)
         send_email.delay(email + "@cigital.com", "Your verification code", msg)
     else:
-        send_dm.delay(twitter_handle, "That looks like an invalid code. Try again?")
-        pass
+        print "No such email or user has verified already!"
+        return
 
 
 @app.task
@@ -153,14 +148,13 @@ def check_auth_code(twitter_handle, code):
     :param code: the code we have in DB
     :return:
     """
-    print "Checking auth for %s - %s" % (twitter_handle, code)
+    print "Checking auth for %s - %s" % (twitter_handle, code,)
     cur = conn.cursor()
-    try:
-        cur.execute("SELECT email, twitter_handle from VERIFIED WHERE code = %s", (code,))
-        result = cur.fetchone()
-        conn.commit()
-    except ProgrammingError:
-        #No results!
+    cur.execute("SELECT email from VERIFIED WHERE code = %s AND twitter_handle=%s", (code, twitter_handle,))
+    result = cur.fetchone()
+    conn.commit()
+    #No results!
+    if result is None:
         send_dm.delay(twitter_handle, "I do not understand this code :(")
         return
     cur.execute("UPDATE VERIFIED SET verified = TRUE WHERE twitter_handle = %s", (twitter_handle,))
