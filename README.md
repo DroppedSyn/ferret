@@ -12,11 +12,17 @@ The Cigital Tech Ferret.
 ## To run the bot
 1. Checkout this repository inside a python virtual environment. Activate the virtual environment (e.g. `source /home/ritesh/code/venvs/ferretbot/bin/activate`)
 1. Run `pip install -r requirements.txt` from within the ferret directory.
-1. Create a `settings.py` file (see `settings.py.dist` for an example)
-1. Create a `celeryconfig.py` file (see `celeryconfig.py.dist` for an example)
+1. Create a `settings.py` file (see `settings.py.dist` for an example, or borrow one from a friend.)
+1. Create a `celeryconfig.py` file (see `celeryconfig.py.dist` for an example, or borrow one from a friend.)
 1. Run `./runcelery.sh` in one window and `celery beat` in another. This starts up the task handler and the scheduler. 
 1. Run `python streamsave.py` to save and process tweets (e.g. tweets with the #swsec hashtag)
-1. See `tasks.py` for a list of tasks 
+1. See `tasks.py` for a list of tasks that the bot can run asynchronously. You can also run these tasks from an interactive Python prompt like so:
 
+    ```python
+    from tasks import send_email 
+    send_email('someone_at_cigital@cigital.com', 'This One Trick Can Take 10 Years off Your Legacy Code', 'Sorry, I lied.')
+    ```    
+1. For the `verify_email` feature to work, the DB must be populated with email addresses. To do this, grab a copy of the corp dir in CSV (or any other plaintext format). Save this file as `corpdir.txt` in the `ferret` directory and run `./populate_emails.sh`
+ 
 ## Next steps
-1. Add more tasks
+1. More testing required
