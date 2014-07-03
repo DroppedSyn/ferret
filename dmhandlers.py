@@ -24,7 +24,6 @@ class DmCommandHandler():
                 twitter_handle = message.sender.screen_name
                 # DEBUG
                 print "%s says they are %s@cigital.com" % (twitter_handle, email)
-                print email, twitter_handle
                 tasks.link_user.delay(email, twitter_handle)
             else:
                 # Check if we have authcode

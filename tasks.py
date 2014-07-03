@@ -111,14 +111,14 @@ def send_dm(to, message):
 
 
 @app.task
-def update_status(message, to=None):
+def update_status(message):
     try:
         #status = "@%s %s" % (to, message[:140])
         #print status
         api = _get_api()
         api.update_status(message)
     except TweepError as err:
-        print "Failed to update status, retrying in 180 seconds"
+        print "Failed to update status, retrying in 180 seconds", err
         #TODO: Exponential back-off, for now retry after 180 seconds
         #raise update_status.retry(countdown=60*3, exc=err)
 
@@ -142,14 +142,13 @@ def link_user(email, twitter_handle):
         cur.execute("UPDATE VERIFIED SET twitter_handle = %s, CODE = %s WHERE LOWER(email) = LOWER(%s)",
                     (twitter_handle, code, email,))
         conn.commit()
-        update_status.delay(twitter_handle, "Hello there! I've sent you a code to claim your Twitter handle, "
-                                            "check your Cigital email")
-        msg = """Hello %s,\n\nEither you, or someone claiming to be you asked to verify the twitter handle %s. If you
-        are the owner of @%s, please send a direct message to the Cigital Tech ferret bot with the following code:\n\n%s""" \
+        update_status.delay("%s I've sent you a code, check your email" % (twitter_handle,))
+        msg = """Hello %s,\nEither you, or someone claiming to be you, asked to link a Twitter account. If you are the
+        owner of @%s, please send a direct message to @cigibot with the following code:\n\n%s""" \
               % (email, twitter_handle, twitter_handle, code)
-        send_email.delay(email + "@cigital.com", "Your verification code", msg)
+        send_email.delay(email + "@cigital.com", "Your cigibot code", msg)
     else:
-        print "No such email or user has verified already!"
+        print email, ":No such email_address or user has verified already!"
         return
 
 
