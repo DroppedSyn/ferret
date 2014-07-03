@@ -5,7 +5,7 @@ Nicked from : http://stackoverflow.com/questions/287871/print-in-terminal-with-c
 import time
 import smtplib
 from email.mime.text import MIMEText
-from settings import EMAIL_ADDRESS, EMAIL_PW
+from settings import EMAIL_ADDRESS, SMTP_SERVER
 
 def get_hits_left(r, api_name, api_url):
     """
@@ -40,10 +40,8 @@ def send_email(to, subject, message):
     msg['Subject'] = subject
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to
-    session = smtplib.SMTP('smtp.gmail.com', '587')
+    session = smtplib.SMTP(SMTP_SERVER, '25')
     session.ehlo()
-    session.starttls()
-    session.login(EMAIL_ADDRESS, EMAIL_PW)
     session.sendmail(EMAIL_ADDRESS, to, msg.as_string())
 
 
