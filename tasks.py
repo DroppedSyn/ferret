@@ -7,7 +7,7 @@ import dmhandlers
 import psycopg2
 from tweepy import TweepError
 from email.mime.text import MIMEText
-from settings import EMAIL_ADDRESS, EMAIL_PW
+from settings import EMAIL_ADDRESS, SMTP_SERVER
 import smtplib
 from psycopg2 import ProgrammingError
 
@@ -177,11 +177,9 @@ def send_email(to, subject, message):
     msg['Subject'] = subject
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to
-    session = smtplib.SMTP('smtp.gmail.com', '587')
+    session = smtplib.SMTP(SMTP_SERVER, '25')
     #TODO: Retry if we fail
     session.ehlo()
-    session.starttls()
-    session.login(EMAIL_ADDRESS, EMAIL_PW)
     session.sendmail(EMAIL_ADDRESS, to, msg.as_string())
 
 if __name__ == '__main__':
