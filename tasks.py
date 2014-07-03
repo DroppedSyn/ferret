@@ -22,9 +22,18 @@ def _get_api():
     api = tweepy.API(auth)
     return api
 
+def get_cursor():
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT 1")
+    except ProgrammingError as p:
+        print "Programming error", p
+        cur.rollback()
+    return cur
+
 
 def _get_sinceid(name):
-    cur = conn.cursor()
+    cur = get_cursor()
     cur.execute("SELECT value FROM SINCEID WHERE name = %s", (name,))
     r = cur.fetchone()
     conn.commit()
@@ -44,7 +53,7 @@ def _set_sinceid(name, sinceid):
 @app.task
 def refresh_followers():
     api = _get_api()
-    cur = conn.cursor()
+    cur = get_cursor()
     try:
         for user in tweepy.Cursor(api.followers, screen_name="CigiBot").items():
             # print"[i]Inserting ---------"
@@ -79,7 +88,7 @@ def fetchdms():
     except TweepError as err:
         print "Failed to fetch DMs", err
         # Retry in four minutes if we fail
-        raise fetchdms.retry(countdown=60*4, exc=err)
+        # raise fetchdms.retry(countdown=60*4, exc=err)
     if len(messages) is not 0:
         dmhandlers.DmCommandHandler(messages)
         _set_sinceid('dm_sinceid', messages[0].id)
@@ -104,14 +113,15 @@ def send_dm(to, message):
 @app.task
 def update_status(message, to=None):
     try:
-        status = "@%s %s" % (to, message[:140])
-        print status
+        #status = "@%s %s" % (to, message[:140])
+        #print status
         api = _get_api()
-        api.update_status(status)
+        api.update_status(message)
     except TweepError as err:
         print "Failed to update status, retrying in 180 seconds"
         #TODO: Exponential back-off, for now retry after 180 seconds
         #raise update_status.retry(countdown=60*3, exc=err)
+
 
 @app.task
 def link_user(email, twitter_handle):
@@ -119,7 +129,8 @@ def link_user(email, twitter_handle):
     Allow users to claim twitter IDs
     if they say I am rksinha, then the DM sender is mapped to that twitter ID
     """
-    cur = conn.cursor()
+    cur = get_cursor()
+
     cur.execute("SELECT email FROM VERIFIED WHERE LOWER(email) = LOWER(%s) AND VERIFIED = FALSE", (email,))
     print "Trying to verify %s" % (email,)
     r = cur.fetchone()
@@ -127,10 +138,11 @@ def link_user(email, twitter_handle):
         # random code for auth
         code = binascii.b2a_hex(os.urandom(4))
         # we might have dupe codes!! Random number generators are not to be trusted.
-        cur.execute("UPDATE VERIFIED SET twitter_handle = %s, CODE = %s WHERE email = %s",
+        cur = get_cursor()
+        cur.execute("UPDATE VERIFIED SET twitter_handle = %s, CODE = %s WHERE LOWER(email) = LOWER(%s)",
                     (twitter_handle, code, email,))
         conn.commit()
-        send_dm.delay(twitter_handle, "I've sent you a code to claim your Twitter handle, "
+        update_status.delay(twitter_handle, "Hello there! I've sent you a code to claim your Twitter handle, "
                                             "check your Cigital email")
         msg = """Hello %s,\n\nEither you, or someone claiming to be you asked to verify the twitter handle %s. If you
         are the owner of @%s, please send a direct message to the Cigital Tech ferret bot with the following code:\n\n%s""" \
@@ -150,17 +162,19 @@ def check_auth_code(twitter_handle, code):
     :return:
     """
     print "Checking auth for %s - %s" % (twitter_handle, code,)
-    cur = conn.cursor()
-    cur.execute("SELECT email from VERIFIED WHERE code = %s AND twitter_handle=%s", (code, twitter_handle,))
+    cur = get_cursor()
+
+    cur.execute("SELECT LOWER(email) from VERIFIED WHERE code = %s AND twitter_handle = %s", (code, twitter_handle, ))
     result = cur.fetchone()
     conn.commit()
     #No results!
     if result is None:
-        send_dm.delay(twitter_handle, "I do not understand this code :(")
+        # Do nothing if we have a bad code
         return
+    cur = get_cursor()
     cur.execute("UPDATE VERIFIED SET verified = TRUE WHERE twitter_handle = %s", (twitter_handle,))
     conn.commit()
-    send_dm.delay(twitter_handle, "Congratulations, you are now a verified user. Email: %s" % (result[0]))
+    update_status.delay("Congratulations @%s, and welcome to swsec land!" % (twitter_handle,))
 
 
 @app.task
@@ -172,13 +186,13 @@ def send_email(to, subject, message):
     :param message: The message
     :return:
     """
-    #TODO: Add checks to stop spamming people!
+    #TODO: Add checks to stop spamming people limit 3?!
     msg = MIMEText(message)
     msg['Subject'] = subject
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to
     session = smtplib.SMTP(SMTP_SERVER, '25')
-    #TODO: Retry if we fail
+    #TODO: Retry if we fail?
     session.ehlo()
     session.sendmail(EMAIL_ADDRESS, to, msg.as_string())
 

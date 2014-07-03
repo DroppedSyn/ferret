@@ -1,3 +1,4 @@
+Fabric==1.9.0
 Flask==0.10.1
 Flask-Bootstrap==3.1.1.2
 Flask-OAuth==0.12
@@ -9,18 +10,18 @@ Werkzeug==0.9.4
 amqp==1.4.5
 anyjson==0.3.3
 argparse==1.2.1
-billiard==3.3.0.17
-celery==3.1.11
+billiard==3.3.0.18
+celery==3.1.12
 ecdsa==0.11
 http-parser==0.8.3
 httplib2==0.9
 itsdangerous==0.24
-kombu==3.0.15
+kombu==3.0.20
 oauth2==1.5.211
 paramiko==1.12.4
 psycopg2==2.5.3
 pycrypto==2.6.1
-pytz==2014.2
+pytz==2014.4
 rauth==0.7.0
 requests==2.3.0
 restkit==4.2.2
