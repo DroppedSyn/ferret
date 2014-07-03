@@ -29,7 +29,9 @@
            {% if value == True %}
            <h3>You're already following {{key[0] | e }} </h3>
            {% else %}
-           <h3>You should follow {{key[0] | e }} <a href="https://twitter.com/{{ key[1] | e }}" class="btn btn-primary btn-lg" role="button">@{{ key[1] | e }}</a> </h3>
+           <h3> {{key[0] | e}} <a href="https://twitter.com/{{ key[1] | e }}" class="twitter-follow-button" data-show-count="false" data-size="large">Follow @{{ key[1] | e }}</a>
+                   <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script> </h3>
+           <!-- <h3>You should follow {{key[0] | e }} <a href="https://twitter.com/{{ key[1] | e }}" class="btn btn-primary btn-lg" role="button">@{{ key[1] | e }}</a> </h3> -->
            {% endif %}
         {% endfor %}
 {% else %}
