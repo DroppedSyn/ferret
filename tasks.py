@@ -96,8 +96,9 @@ def send_dm(to, message):
         api.send_direct_message(screen_name=to, text=message)
     except TweepError as err:
         print "Failed to send %s to %s" % (message, to)
+        print err
         #TODO: Exponential back-off, for now retry after 180 seconds
-        raise send_dm.retry(countdown=60*3, exc=err)
+        #raise send_dm.retry(countdown=60*3, exc=err)
 
 
 @app.task
@@ -110,7 +111,7 @@ def update_status(message, to=None):
     except TweepError as err:
         print "Failed to update status, retrying in 180 seconds"
         #TODO: Exponential back-off, for now retry after 180 seconds
-        raise update_status.retry(countdown=60*3, exc=err)
+        #raise update_status.retry(countdown=60*3, exc=err)
 
 @app.task
 def link_user(email, twitter_handle):
@@ -119,7 +120,7 @@ def link_user(email, twitter_handle):
     if they say I am rksinha, then the DM sender is mapped to that twitter ID
     """
     cur = conn.cursor()
-    cur.execute("SELECT email FROM VERIFIED WHERE email = %s AND VERIFIED = FALSE", (email,))
+    cur.execute("SELECT email FROM VERIFIED WHERE LOWER(email) = LOWER(%s) AND VERIFIED = FALSE", (email,))
     print "Trying to verify %s" % (email,)
     r = cur.fetchone()
     if r is not None:

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS FOLLOWER(id character varying(1024) NOT NULL, screen_
 CREATE TABLE IF NOT EXISTS FOLLOWS(id serial PRIMARY KEY, screen_name varchar);
 
 /*For verifying users */
-DROP TABLE VERIFIED;
+DROP TABLE IF EXISTS VERIFIED;
 CREATE TABLE IF NOT EXISTS VERIFIED(email varchar PRIMARY KEY, twitter_handle varchar default '', code varchar default 'deadbeef', verified boolean default false);
 
 /* To populate the VERIFIED table, run populate_emails.sh */ 
