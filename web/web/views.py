@@ -19,10 +19,13 @@ twitter = OAuth1Service(
     base_url='https://api.twitter.com/1.1/')
 
 # views
-@app.route('/')
-def index():
+@app.route('/checkme/')
+def checkme():
     return render_template('login.html')
 
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/twitter/login')
 def login():

@@ -1,7 +1,7 @@
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/fixes.html" as fixes %}
 {% block head %}
-<title>Paco</title>
+<title>Twigital</title>
 {{super()}}
 {{fixes.ie8()}}
 {% endblock %}
@@ -11,30 +11,34 @@
 {% block content %}
 <div class="container theme-showcase" role="main">
     <div class ="jumbotron">
-    <h1>I am Paco</h1>
-        <p> To check if you follow some key Cigital tweeters, login with your twitter account. We do not store your
-         Twitter credentials and authorization tokens generated are only used to determine if you follow certain people.</p>
-        {% if not follows %}
-        <p><a href="{{ url_for('login') }}" class="btn btn-primary btn-lg" role="button">Sign in with twitter &raquo;</a></p>
-        {% endif %}
+	<h1>Twigital!</h1>
+        <p>Time to get social. We want you helping tell the world about <code>#swsec</code>. We want you tweeting during Tech Fair.</p>
+<p>There's lots of long-term benefit to tweeting about <code>#security</code>.
+There's also possibly an immediate payout. One lucky person who completes the
+tasks here wins <b>a prize</b>.</p>
+<h2>Your Mission</h2>
+<p>There are just a few steps to do and they're pretty straightforward. You may have already done many of them.
+Do them whenever you've got a bit of time. Deadline for the drawing is 15:00
+Saturday.</p>
+<ol>
+<li>Create a Twitter account by going <a target="_new"
+href="https://twitter.com/signup">to Twitter</a>.</li>
+<li>Follow <a target="_new" href="https://twitter.com/cigibot">our intelligently
+artificial bot</a>. He keeps score.</li>
+<li>DM your Cigital userid to <a href="https://twitter.com/cigibot">@cigibot</a></li>
+<li>Check your Cigital email and get the verification code</li>
+<li>DM the code back to <a href="https://twitter.com/cigibot">@cigibot</a>. You'll get a confirmation email. Now we know
+who you are so we can figure out if you've completed everything.</li>
+<li>Make sure <a href="/checkme/">you're following the right folks</a>.</li>
+<li>Tweet something using the <code>#TechFair14</code> hash tag. Our bot will
+retweet it.</li>
+<li>Bask in the glory of knowing you've master the essential skills of Twitter.</li>
+</ol>
+<h2>During Tech Fair</h2>
+<p>Feel free to tweet what you're seeing and doing. Be sure to keep
+your head in the game. Give the speakers your attention and participate
+fully!</p>
     </div>
-{% for message in get_flashed_messages() %}
-<div class="alert alert-danger alert-dismissable">
-{{ message }}
-<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-</div>
-{% endfor %}
-{% if follows %}
-        {% for key, value in follows.iteritems() %}
-           {% if value == True %}
-           <h3>You're already following {{key[0] | e }} </h3>
-           {% else %}
-           <h3> {{key[0] | e}} <a href="https://twitter.com/{{ key[1] | e }}" class="twitter-follow-button" data-show-count="false" data-size="large">Follow @{{ key[1] | e }}</a>
-                   <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script> </h3>
-           <!-- <h3>You should follow {{key[0] | e }} <a href="https://twitter.com/{{ key[1] | e }}" class="btn btn-primary btn-lg" role="button">@{{ key[1] | e }}</a> </h3> -->
-           {% endif %}
-        {% endfor %}
-{% else %}
-{% endif %}
+<p>Keep your eyes out for extra credit opportunities.</p>
 </div>
 {% endblock %}
