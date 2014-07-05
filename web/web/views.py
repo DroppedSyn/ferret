@@ -5,14 +5,13 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 from rauth.service import OAuth1Service
 from rauth.utils import parse_utf8_qsl
-#from settings import TW_KEY, TW_SECRET, LIST_OF_PEOPLE, LIST_OF_NAMES
 import web.models
 
 # rauth OAuth 1.0 service wrapper
 twitter = OAuth1Service(
     name='twitter',
-    consumer_key=app.config['TW_KEY'],
-    consumer_secret=app.config['TW_SECRET'],
+    consumer_key=app.config['CONSUMER_KEY'],
+    consumer_secret=app.config['CONSUMER_SECRET'],
     request_token_url='https://api.twitter.com/oauth/request_token',
     access_token_url='https://api.twitter.com/oauth/access_token',
     authorize_url='https://api.twitter.com/oauth/authorize',

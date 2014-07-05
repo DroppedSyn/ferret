@@ -1,5 +1,6 @@
 from celery import Celery
-import binascii, os
+import binascii
+import os
 import tweepy
 import settings
 import utils
@@ -16,11 +17,13 @@ app.config_from_object('celeryconfig')
 conn = psycopg2.connect(settings.PGDBNAME)
 conn.autocommit = True
 
+
 def _get_api():
     auth = tweepy.OAuthHandler(settings.CONSUMER_KEY, settings.CONSUMER_SECRET)
     auth.set_access_token(settings.ACCESS_TOKEN, settings.ACCESS_TOKEN_SECRET)
     api = tweepy.API(auth)
     return api
+
 
 def get_cursor():
     cur = conn.cursor()
@@ -56,9 +59,6 @@ def refresh_followers():
     cur = get_cursor()
     try:
         for user in tweepy.Cursor(api.followers, screen_name="CigiBot").items():
-            # print"[i]Inserting ---------"
-            # print user.id
-            #print user.screen_name
             cur.execute("""INSERT INTO FOLLOWER (id,screen_name) SELECT %s, %s WHERE
                 NOT EXISTS (SELECT id FROM FOLLOWER WHERE id = %s)""", (str(user.id), user.screen_name, str(user.id)))
             conn.commit()
@@ -73,7 +73,6 @@ def check_if_follows():
         print user.screen_name
 
 
-
 @app.task
 def fetchdms():
     api = _get_api()
@@ -81,20 +80,18 @@ def fetchdms():
                                '/direct_messages')
     if hits < 1:
         return
-    #messages = None
+    messages = None
     sinceid = _get_sinceid('dm_sinceid')
     try:
         messages = api.direct_messages(since_id=sinceid)
     except TweepError as err:
         print "Failed to fetch DMs", err
-        # Retry in four minutes if we fail
-        # raise fetchdms.retry(countdown=60*4, exc=err)
+	return
     if len(messages) is not 0:
         dmhandlers.DmCommandHandler(messages)
         _set_sinceid('dm_sinceid', messages[0].id)
     else:
-        print "No new DMs yet!"
-    return True
+        print "No new DMs yet! Hits left %s" % (hits,)
 
 
 @app.task
@@ -137,16 +134,16 @@ def link_user(email, twitter_handle):
     if r is not None:
         # random code for auth
         code = binascii.b2a_hex(os.urandom(4))
-        # we might have dupe codes!! Random number generators are not to be trusted.
+        #TODO: we might have dupe codes!! Random number generators are not to be trusted.
         cur = get_cursor()
         cur.execute("UPDATE VERIFIED SET twitter_handle = %s, CODE = %s WHERE LOWER(email) = LOWER(%s)",
                     (twitter_handle, code, email,))
         conn.commit()
         update_status.delay("%s I've sent you a code, check your email" % (twitter_handle,))
-        msg = """Hello %s,\nEither you, or someone claiming to be you, asked to link a Twitter account. If you are the
+        msg = """Hello %s,\nEither you, or someone claiming to be you, asked to link a Twitter account. \nIf you are the
         owner of @%s, please send a direct message to @cigibot with the following code:\n\n%s""" \
-              % (email, twitter_handle, twitter_handle, code)
-        send_email.delay(email + "@cigital.com", "Your cigibot code", msg)
+              % (email, twitter_handle, code)
+        send_email.delay(email + "@cigital.com", "Look inside for your cigibot code!", msg)
     else:
         print email, ":No such email_address or user has verified already!"
         return

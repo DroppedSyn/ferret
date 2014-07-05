@@ -17,11 +17,15 @@ def check_if_tweet_from_follower(tweet):
     """
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
-    cur.execute("SELECT id FROM FOLLOWER WHERE id = %s",
-                [str(tweet["user"]["id"])])  #Magic! ('One, two, three, convert this id!')
-    results = cur.fetchall()
+    userid = str(tweet["user"]["id"])
+    cur.execute("SELECT screen_name from FOLLOWER JOIN verified ON follower.screen_name=verified.twitter_handle "
+                "WHERE id = %s", (userid,))
+
+    #cur.execute("SELECT twitter_handle FROM VERIFIED WHERE id = %s",
+    #            [str(tweet["user"]["id"])])
+    result = cur.fetchone()
     conn.close()
-    if len(results) > 0:
+    if result is not None:
         return True
     return False
 
@@ -29,13 +33,14 @@ def check_if_tweet_from_follower(tweet):
 def check_if_follower_has_tweeted_before(tweet):
     """
     This function checks if the user has tweeted before, by checking if the user is within the hastweeted table.
+    :return True if they've tweeted before, false if they haven't
     """
     conn = psycopg2.connect(settings.PGDBNAME)
     cur = conn.cursor()
     cur.execute("SELECT user_id FROM HASTWEETED WHERE user_id = %s", [str(tweet["user"]["id"])]);
-    results = cur.fetchall()
+    results = cur.fetchone()
     conn.close()
-    if len(results) > 0:
+    if results is not None:
         return True
     return False
 
@@ -45,16 +50,17 @@ def screen_and_handle_user(tweet):
     This function checks if the user is a follower and if they have not tweeted before. If this is the case, it will re-tweet the users tweet, add them to the 
     hastweeted table, and re-tweet their tweet.
     """
-    if check_if_tweet_from_follower(tweet) is True and check_if_follower_has_tweeted_before(tweet) is not False:
+    if check_if_tweet_from_follower(tweet) is True and check_if_follower_has_tweeted_before(tweet) is False:
         try:
             a.retweet(tweet["id"])
         except error.TweepError as te:
-            print"A tweepy error occurred: ", te
+            print"A Tweepy error occurred, failed to retweet! ", te
+            return
         conn = psycopg2.connect(settings.PGDBNAME)
         cur = conn.cursor()
-        #print"User is a follower - User has not tweeted. Retweeting, Adding user."
+        #print"User is a follower - Retweeted, Adding user."
         try:
-            cur.execute("INSERT INTO HASTWEETED(user_id) VALUES (%s)", [str(tweet["user"]["id"])]);
+            cur.execute("INSERT INTO HASTWEETED(user_id) VALUES (%s)", [str(tweet["user"]["id"])])
             conn.commit()
         except Exception as e:
             conn.rollback()
@@ -128,7 +134,7 @@ def persist_tweet_dict(data):
         print "[!-]Unable to save"
     #print checkIsTweetFromFollower(data)
     conn.close()
-    #screen_and_handle_user(data)
+    screen_and_handle_user(data)
 
 
 def reset_cursor(conn):
@@ -156,4 +162,5 @@ if __name__ == '__main__':
     a = API(auth)
     l = StdOutListener()
     stream = Stream(auth, l, timeout=None)
-    stream.filter(track=['testingDisregard'])
+    stream.filter(track=settings.TRACKING_TERMS)
+
