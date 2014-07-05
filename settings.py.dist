@@ -1,13 +1,26 @@
 # Secret settings! Do not share
 # Go to http://dev.twitter.com and create an app.
 # The consumer key and secret will be generated for you after
-consumer_key=""
-consumer_secret=""
+CONSUMER_KEY =""
+CONSUMER_SECRET =""
 
 # After the step above, you will be redirected to your app's page.
 # Create an access token under the the "Your access token" section
-access_token=""
-access_token_secret=""
+ACCESS_TOKEN =""
+ACCESS_TOKEN_SECRET ="" 
 
-# List of people you want the bot to recommend (twitter_screen_names)
-list_of_people=[]
+#List of people we want to suggest
+LIST_OF_PEOPLE = []
+# Their names (TODO:redundant, fix it!)
+LIST_OF_NAMES = {}
+# The terms we want to track
+TRACKING_TERMS = []
+# PostgreSQL DB Name
+PGDBNAME = []
+#These are settings for the web application 
+SECRET_KEY = ""
+DEBUG = True
+# Emaila address for the bot 
+EMAIL_ADDRESS = ""
+# The server used 
+SMTP_SERVER = "" 
