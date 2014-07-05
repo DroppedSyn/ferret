@@ -1,5 +1,6 @@
 /* Used to store tweet IDs */
 CREATE TABLE IF NOT EXISTS SINCEID(id serial PRIMARY KEY, name varchar, value bigint DEFAULT 0);
+INSERT INTO SINCEID (name, value) VALUES('dm_sinceid', DEFAULT);
 
 /* FOLLOWER TABLEd */
 CREATE TABLE IF NOT EXISTS FOLLOWER(id character varying(1024) NOT NULL, screen_name varchar, constraint followerpkey PRIMARY KEY(id)) WITH (OIDS=FALSE);

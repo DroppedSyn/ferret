@@ -8,7 +8,7 @@ import dmhandlers
 import psycopg2
 from tweepy import TweepError
 from email.mime.text import MIMEText
-from settings import EMAIL_ADDRESS, SMTP_SERVER
+from settings import EMAIL_ADDRESS, SMTP_SERVER, DEBUG
 import smtplib
 from psycopg2 import ProgrammingError
 
@@ -63,7 +63,7 @@ def refresh_followers():
                 NOT EXISTS (SELECT id FROM FOLLOWER WHERE id = %s)""", (str(user.id), user.screen_name, str(user.id)))
             conn.commit()
     except TweepError as err:
-        raise refresh_followers.retry(countdown=60*3, exc=err)
+        raise refresh_followers.retry(countdown=60 * 3, exc=err)
 
 
 @app.task
@@ -86,12 +86,20 @@ def fetchdms():
         messages = api.direct_messages(since_id=sinceid)
     except TweepError as err:
         print "Failed to fetch DMs", err
-	return
+        return
     if len(messages) is not 0:
         dmhandlers.DmCommandHandler(messages)
         _set_sinceid('dm_sinceid', messages[0].id)
+        destroy_dms.delay(messages)
     else:
         print "No new DMs yet! Hits left %s" % (hits,)
+
+
+@app.task
+def destroy_dms(messages):
+    api = _get_api()
+    for message in messages:
+        api.destroy_direct_message(message.id)
 
 
 @app.task
@@ -103,20 +111,23 @@ def send_dm(to, message):
     except TweepError as err:
         print "Failed to send %s to %s" % (message, to)
         print err
-        #TODO: Exponential back-off, for now retry after 180 seconds
+        # TODO: Exponential back-off, for now retry after 180 seconds
         #raise send_dm.retry(countdown=60*3, exc=err)
 
 
 @app.task
 def update_status(message):
+    if DEBUG:
+        print "Running in DEBUG! Status update: %s" % (message,)
+        return
     try:
-        #status = "@%s %s" % (to, message[:140])
+        # status = "@%s %s" % (to, message[:140])
         #print status
         api = _get_api()
         api.update_status(message)
     except TweepError as err:
         print "Failed to update status, retrying in 180 seconds", err
-        #TODO: Exponential back-off, for now retry after 180 seconds
+        # TODO: Exponential back-off, for now retry after 180 seconds
         #raise update_status.retry(countdown=60*3, exc=err)
 
 
@@ -127,19 +138,18 @@ def link_user(email, twitter_handle):
     if they say I am rksinha, then the DM sender is mapped to that twitter ID
     """
     cur = get_cursor()
-
     cur.execute("SELECT email FROM VERIFIED WHERE LOWER(email) = LOWER(%s) AND VERIFIED = FALSE", (email,))
     print "Trying to verify %s" % (email,)
     r = cur.fetchone()
     if r is not None:
         # random code for auth
         code = binascii.b2a_hex(os.urandom(4))
-        #TODO: we might have dupe codes!! Random number generators are not to be trusted.
+        # TODO: we might have dupe codes!! Random number generators are not to be trusted.
         cur = get_cursor()
         cur.execute("UPDATE VERIFIED SET twitter_handle = %s, CODE = %s WHERE LOWER(email) = LOWER(%s)",
                     (twitter_handle, code, email,))
         conn.commit()
-        update_status.delay("%s I've sent you a code, check your email" % (twitter_handle,))
+        #update_status.delay("%s I've sent you a code, check your email" % (twitter_handle,))
         msg = """Hello %s,\nEither you, or someone claiming to be you, asked to link a Twitter account. \nIf you are the
         owner of @%s, please send a direct message to @cigibot with the following code:\n\n%s""" \
               % (email, twitter_handle, code)
@@ -163,14 +173,14 @@ def check_auth_code(twitter_handle, code):
     cur.execute("SELECT LOWER(email) from VERIFIED WHERE code = %s AND twitter_handle = %s", (code, twitter_handle, ))
     result = cur.fetchone()
     conn.commit()
-    #No results!
+    # No results!
     if result is None:
         # Do nothing if we have a bad code
         return
     cur = get_cursor()
     cur.execute("UPDATE VERIFIED SET verified = TRUE WHERE twitter_handle = %s", (twitter_handle,))
     conn.commit()
-    update_status.delay("Congratulations @%s, and welcome to swsec land!" % (twitter_handle,))
+    #update_status.delay("Congratulations @%s, and welcome to swsec land!" % (twitter_handle,))
 
 
 @app.task
@@ -182,7 +192,10 @@ def send_email(to, subject, message):
     :param message: The message
     :return:
     """
-    #TODO: Add checks to stop spamming people limit 3?!
+    if DEBUG:
+        print ("DEBUG: Email to %s,\nSubject:%s\nMessage:%s") % (to, subject, message)
+        return
+    # TODO: Add checks to stop spamming people limit 3?!
     msg = MIMEText(message)
     msg['Subject'] = subject
     msg['From'] = EMAIL_ADDRESS
@@ -191,6 +204,7 @@ def send_email(to, subject, message):
     #TODO: Retry if we fail?
     session.ehlo()
     session.sendmail(EMAIL_ADDRESS, to, msg.as_string())
+
 
 if __name__ == '__main__':
     print "Testing!"

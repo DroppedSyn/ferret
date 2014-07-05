@@ -108,7 +108,7 @@ def create_tweet_dict(tweet):
         tweetDict.append(["screen_name", unicode(tweet["user"]["screen_name"])])
         uts = '%014d' % long(time.mktime(time.strptime(tweet["user"]['created_at'], '%a %b %d %H:%M:%S +0000 %Y')))
         tweetDict.append(["user_created_at", uts])
-    print tweetDict
+    print tweetDict[0][1]
     return tweetDict
 
 
