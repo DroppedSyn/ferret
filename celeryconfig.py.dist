@@ -1,14 +1,20 @@
 from datetime import timedelta
+# rabbit mq
 BROKER_URL = 'amqp://'
-CELERY_RESULT_BACKEND = 'db+postgresql://rannekk@/rannekk'
+# The name of the DB
+CELERY_RESULT_BACKEND = 'db+postgresql://ritesh@/ritesh'
 CELERYBEAT_SCHEDULE = {
-        'fetch-direct-messages-every-2min': {
-            'task': 'tasks.fetchdms',
-            'schedule': timedelta(minutes=2)
-            },
-        'check-if-follows-every2min': {
-            'task': 'tasks.check_if_follows',
-            'schedule': timedelta(minutes=2)
-            },
-        }
+    'fetch-direct-messages-every-min': {
+        'task': 'tasks.fetchdms',
+        'schedule': timedelta(minutes=1)
+    },
+    'refresh-followers-every-2-min': {
+        'task': 'tasks.refresh_followers',
+        'schedule': timedelta(minutes=1)
+    },
+    'autofollow-all' : {
+        'task': 'tasks.auto_follow',
+        'schedule': timedelta(minutes=2)
+    }
+}
 CELERY_TIMEZONE = 'UTC'

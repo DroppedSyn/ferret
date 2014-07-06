@@ -25,7 +25,7 @@ def _get_api():
     return api
 
 
-def get_cursor():
+def _get_cursor():
     cur = conn.cursor()
     try:
         cur.execute("SELECT 1")
@@ -36,7 +36,7 @@ def get_cursor():
 
 
 def _get_sinceid(name):
-    cur = get_cursor()
+    cur = _get_cursor()
     cur.execute("SELECT value FROM SINCEID WHERE name = %s", (name,))
     r = cur.fetchone()
     conn.commit()
@@ -53,10 +53,20 @@ def _set_sinceid(name, sinceid):
     conn.commit()
 
 
+def _get_code():
+    cur = _get_cursor()
+    cur.execute("SELECT code FROM verified")
+    r = cur.fetchall()
+    code = binascii.b2a_hex(os.urandom(4))
+    while (code,) in r:
+        code = binascii.b2a_hex(os.urandom(4))
+    return code
+
+
 @app.task
 def refresh_followers():
     api = _get_api()
-    cur = get_cursor()
+    cur = _get_cursor()
     try:
         for user in tweepy.Cursor(api.followers, screen_name="CigiBot").items():
             cur.execute("""INSERT INTO FOLLOWER (id,screen_name) SELECT %s, %s WHERE
@@ -64,6 +74,13 @@ def refresh_followers():
             conn.commit()
     except TweepError as err:
         raise refresh_followers.retry(countdown=60 * 3, exc=err)
+
+
+@app.task()
+def auto_follow():
+    api = _get_api()
+    for follower in tweepy.Cursor(api.followers).items():
+        follower.follow()
 
 
 @app.task
@@ -92,7 +109,8 @@ def fetchdms():
         _set_sinceid('dm_sinceid', messages[0].id)
         destroy_dms.delay(messages)
     else:
-        print "No new DMs yet! Hits left %s" % (hits,)
+        if DEBUG:
+            print "No new DMs yet! Hits left %s" % (hits,)
 
 
 @app.task
@@ -137,15 +155,14 @@ def link_user(email, twitter_handle):
     Allow users to claim twitter IDs
     if they say I am rksinha, then the DM sender is mapped to that twitter ID
     """
-    cur = get_cursor()
+    cur = _get_cursor()
     cur.execute("SELECT email FROM VERIFIED WHERE LOWER(email) = LOWER(%s) AND VERIFIED = FALSE", (email,))
     print "Trying to verify %s" % (email,)
     r = cur.fetchone()
     if r is not None:
         # random code for auth
-        code = binascii.b2a_hex(os.urandom(4))
-        # TODO: we might have dupe codes!! Random number generators are not to be trusted.
-        cur = get_cursor()
+        code = _get_code()
+        cur = _get_cursor()
         cur.execute("UPDATE VERIFIED SET twitter_handle = %s, CODE = %s WHERE LOWER(email) = LOWER(%s)",
                     (twitter_handle, code, email,))
         conn.commit()
@@ -168,7 +185,7 @@ def check_auth_code(twitter_handle, code):
     :return:
     """
     print "Checking auth for %s - %s" % (twitter_handle, code,)
-    cur = get_cursor()
+    cur = _get_cursor()
 
     cur.execute("SELECT LOWER(email) from VERIFIED WHERE code = %s AND twitter_handle = %s", (code, twitter_handle, ))
     result = cur.fetchone()
@@ -177,7 +194,7 @@ def check_auth_code(twitter_handle, code):
     if result is None:
         # Do nothing if we have a bad code
         return
-    cur = get_cursor()
+    cur = _get_cursor()
     cur.execute("UPDATE VERIFIED SET verified = TRUE WHERE twitter_handle = %s", (twitter_handle,))
     conn.commit()
     #update_status.delay("Congratulations @%s, and welcome to swsec land!" % (twitter_handle,))
