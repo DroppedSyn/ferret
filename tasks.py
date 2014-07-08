@@ -67,6 +67,10 @@ def _get_code():
 def refresh_followers():
     api = _get_api()
     cur = _get_cursor()
+    hits = utils.get_hits_left(api.rate_limit_status(), 'followers', '/followers/list')
+    print hits
+    if hits < 1:
+        return
     try:
         for user in tweepy.Cursor(api.followers, screen_name="CigiBot").items():
             cur.execute("""INSERT INTO FOLLOWER (id,screen_name) SELECT %s, %s WHERE
@@ -79,6 +83,10 @@ def refresh_followers():
 @app.task()
 def auto_follow():
     api = _get_api()
+    hits = utils.get_hits_left(api.rate_limit_status(), 'followers', '/followers/list')
+    print hits
+    if hits < 1:
+        return
     for follower in tweepy.Cursor(api.followers).items():
         follower.follow()
 
@@ -86,6 +94,10 @@ def auto_follow():
 @app.task
 def check_if_follows():
     api = _get_api()
+    hits = utils.get_hits_left(api.rate_limit_status(), 'followers', '/followers/list')
+    print hits
+    if hits < 1:
+        return
     for user in tweepy.Cursor(api.followers, screen_name="CigiBot").items():
         print user.screen_name
 
