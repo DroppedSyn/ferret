@@ -12,7 +12,7 @@ grep -Eio '\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b' $CORPDIR > $OUT
 rm -f $CSVDATA 
 for line in `cat $OUT`;
 do
-        echo $line | sed -e "s/@.*$//" -e "s/$/,twitter_not_provided,DEFAULT,FALSE/" >> dbout.txt
+        echo $line | sed -e "s/@.*$//" -e "s/$/,twitter_not_provided,DEFAULT,FALSE,0/" >> dbout.txt
 done
 
 ABPATH=`pwd -P`/$CSVDATA

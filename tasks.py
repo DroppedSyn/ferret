@@ -209,18 +209,28 @@ def send_email(to, subject, message):
     :param message: The message
     :return:
     """
-    if DEBUG:
-        print ("DEBUG: Email to %s,\nSubject:%s\nMessage:%s") % (to, subject, message)
-        return
+    #if DEBUG:
+    #    print ("DEBUG: Email to %s,\nSubject:%s\nMessage:%s") % (to, subject, message)
+    #    return
     # TODO: Add checks to stop spamming people limit 3?!
+    cur = _get_cursor()
+    cur.execute("SELECT emails_sent FROM verified WHERE email = %s", (to,))
+    r = cur.fetchone()
+    if r is not None:
+        if r[0] >= 3:
+            print ("ERR: User %s has been spammed enough, not going to email them.") % (to,)
+            return
     msg = MIMEText(message)
     msg['Subject'] = subject
     msg['From'] = EMAIL_ADDRESS
-    msg['To'] = to
+    msg['To'] = "%s@cigital.com" % (to,)
     session = smtplib.SMTP(SMTP_SERVER, '25')
     #TODO: Retry if we fail?
     session.ehlo()
-    session.sendmail(EMAIL_ADDRESS, to, msg.as_string())
+    session.sendmail(EMAIL_ADDRESS, msg['To'], msg.as_string())
+    cur = _get_cursor()
+    cur.execute("UPDATE verified SET emails_sent = emails_sent + 1 WHERE email = %s", (to,))
+    conn.commit()
 
 
 if __name__ == '__main__':

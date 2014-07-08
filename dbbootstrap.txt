@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS FOLLOWS(id serial PRIMARY KEY, screen_name varchar);
 
 /*For verifying users */
 DROP TABLE IF EXISTS VERIFIED;
-CREATE TABLE IF NOT EXISTS VERIFIED(email varchar PRIMARY KEY, twitter_handle varchar default '', code varchar default 'deadbeef', verified boolean default false);
+CREATE TABLE IF NOT EXISTS VERIFIED(email varchar PRIMARY KEY, twitter_handle varchar default '', code varchar default 'deadbeef', verified boolean default false, emails_sent smallint default 0);
 
 /* To populate the VERIFIED table, run populate_emails.sh */ 
 
