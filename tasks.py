@@ -58,6 +58,7 @@ def _get_code():
     cur.execute("SELECT code FROM verified")
     r = cur.fetchall()
     code = binascii.b2a_hex(os.urandom(4))
+    # There has got to be a better way to do this!
     while (code,) in r:
         code = binascii.b2a_hex(os.urandom(4))
     return code
@@ -68,7 +69,7 @@ def refresh_followers():
     api = _get_api()
     cur = _get_cursor()
     hits = utils.get_hits_left(api.rate_limit_status(), 'followers', '/followers/list')
-    print hits
+    print "refresh_followers: We have %s hits left" % (hits,)
     if hits < 1:
         return
     try:
@@ -84,7 +85,7 @@ def refresh_followers():
 def auto_follow():
     api = _get_api()
     hits = utils.get_hits_left(api.rate_limit_status(), 'followers', '/followers/list')
-    print hits
+    print "auto_follow: We have %s hits left" % (hits,)
     if hits < 1:
         return
     for follower in tweepy.Cursor(api.followers).items():
