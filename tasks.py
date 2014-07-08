@@ -183,7 +183,7 @@ def link_user(email, twitter_handle):
         msg = """Hello %s,\nEither you, or someone claiming to be you, asked to link a Twitter account. \nIf you are the
         owner of @%s, please send a direct message to @cigibot with the following code:\n\n%s""" \
               % (email, twitter_handle, code)
-        send_email.delay(email + "@cigital.com", "Look inside for your cigibot code!", msg)
+        send_email.delay(email, "Look inside for your cigibot code!", msg)
     else:
         print email, ":No such email_address or user has verified already!"
         return
@@ -210,7 +210,7 @@ def check_auth_code(twitter_handle, code):
     cur = _get_cursor()
     cur.execute("UPDATE VERIFIED SET verified = TRUE WHERE twitter_handle = %s", (twitter_handle,))
     conn.commit()
-    #update_status.delay("Congratulations @%s, and welcome to swsec land!" % (twitter_handle,))
+    update_status.delay("Congratulations @%s, and welcome to Tech Fair 2014!" % (twitter_handle,))
 
 
 @app.task
